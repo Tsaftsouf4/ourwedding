@@ -16,7 +16,7 @@
     --bg: #f6ead8;
 
     /* One smooth motion */
-    --turnDur: .78s;
+    --turnDur: .82s;
     --turnEase: cubic-bezier(.14,.92,.16,1);
   }
 
@@ -29,7 +29,7 @@
 
   .stage{
     position:relative;
-    perspective: 1200px;            /* just enough for “magazine” */
+    perspective: 1200px;            /* enough for “page”, not “door” */
     perspective-origin: 50% 50%;
     display:flex;
     align-items:center;
@@ -85,6 +85,8 @@
     z-index:10;
     pointer-events:none;
     background:transparent;
+
+    /* gentle reveal only for the UNDER page */
     opacity:0;
     transform-origin:center;
   }
@@ -120,7 +122,7 @@
     width:100%;height:100%;
     transform-style: preserve-3d;
     transform-origin: left center;
-    will-change: transform, filter, opacity;
+    will-change: transform, filter;
   }
 
   .face{
@@ -139,10 +141,10 @@
     display:block;
   }
 
-  /* We animate ONLY the current page (front) for glitch-free */
+  /* We animate ONLY the current page (front) */
   .back{ display:none; }
 
-  /* ===== “Magazine bend” overlays (no clip-path = no iOS stutter) ===== */
+  /* ===== “Magazine bend” overlays (no clip-path = smooth on iOS) ===== */
   .specular{
     position:absolute; inset:-2px;
     border-radius: var(--radius);
@@ -173,13 +175,12 @@
     filter: blur(1.1px);
   }
 
-  /* This makes the “curved / rolled edge” illusion */
+  /* Curved/rolled edge illusion (no transparency on the PAGE itself) */
   .curlRoll{
     position:absolute; inset:0;
     border-radius: var(--radius);
     pointer-events:none;
     opacity:0;
-    /* moving bright rim + soft falloff */
     background:
       radial-gradient(85% 120% at 86% 50%,
         rgba(255,255,255,.32) 0%,
@@ -193,10 +194,9 @@
       );
     mix-blend-mode: screen;
     filter: blur(.4px);
-    transform: translateX(-18px); /* starts more “inside” */
+    transform: translateX(-18px);
   }
 
-  /* subtle edge */
   .edge{
     position:absolute;
     top:0; bottom:0; left:0;
@@ -210,25 +210,23 @@
     pointer-events:none;
   }
 
-  /* ===== ONE smooth animation (0 -> 100 only) ===== */
+  /* ===== ONE smooth animation (NO opacity fade) ===== */
   @keyframes magazineTurnSmooth {
     0%{
       transform: rotateY(0deg) translateX(0) skewY(0deg) rotateZ(0deg) scaleX(1);
-      opacity: 1;
       filter: blur(0px);
     }
     100%{
-      /* less “door/cardboard”, more “magazine” */
-      transform: rotateY(-66deg) translateX(28px) skewY(-3.2deg) rotateZ(-.85deg) scaleX(.94);
-      opacity: 0;
-      filter: blur(.35px);
+      /* less “door”: smaller rotateY, more skew + roll */
+      transform: rotateY(-58deg) translateX(26px) skewY(-3.2deg) rotateZ(-.85deg) scaleX(.94);
+      filter: blur(.18px);
     }
   }
 
   @keyframes specularMove{
-    0%   { opacity:0; transform: translateX(-38%) skewX(-12deg); }
+    0%   { opacity:0; transform: translateX(-40%) skewX(-12deg); }
     35%  { opacity:.14; }
-    62%  { opacity:.32; transform: translateX(10%) skewX(-10deg); }
+    62%  { opacity:.34; transform: translateX(10%) skewX(-10deg); }
     100% { opacity:0; transform: translateX(42%) skewX(-8deg); }
   }
 
@@ -417,10 +415,12 @@
       top  = (rect.height - h) / 2;
     }
 
+    // show next page underneath
     underImg.src = nextSrc;
     placeOverStage(underPage, w, h, left, top);
     underPage.classList.add('show');
 
+    // animate current page on top (NO opacity fade)
     frontImg.src = currentSrc;
     placeOverStage(flipLayer, w, h, left, top);
     flipLayer.classList.add('show');
@@ -434,10 +434,14 @@
     const done = () => {
       sheet.removeEventListener('animationend', done);
       sheet.classList.remove('turning');
+
+      // instantly swap (this is why we don't need opacity fade)
       flipLayer.classList.remove('show');
       underPage.classList.remove('show');
+
       busy = false;
       updateButtons();
+
       if (onDone) onDone();
     };
 
