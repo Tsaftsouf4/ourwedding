@@ -7,173 +7,236 @@
   <meta name="description" content="Ψηφιακή πρόσκληση γάμου" />
   <style>
     :root{
-      --bg:#f6ead9;
-      --card:#fff7ee;
+      --bg:#f6ead9;         /* ζεστό beige όπως οι κάρτες */
       --ink:#4a4038;
       --muted:#7a6d63;
-      --btn:#4a4038;
-      --btnText:#ffffff;
-      --shadow: 0 14px 40px rgba(0,0,0,.10);
-      --radius: 26px;
-      --max: 980px;
+      --shadow: 0 18px 55px rgba(0,0,0,.18);
+      --radius: 22px;
+      --w: min(92vw, 520px);          /* πλάτος “βιβλίου” */
+      --h: calc(var(--w) * 1.45);     /* αναλογία */
     }
+
     *{box-sizing:border-box}
     body{
       margin:0;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
-      color:var(--ink);
-      background: radial-gradient(1200px 800px at 50% -200px, #fff 0%, var(--bg) 55%, #f3e2cf 100%);
+      background: var(--bg);
+      color: var(--ink);
       -webkit-font-smoothing:antialiased;
       text-rendering:optimizeLegibility;
+      overflow-x:hidden;
     }
-    a{color:inherit}
-    .wrap{max-width:var(--max); margin:0 auto; padding:24px 18px 60px}
-    header{
-      display:flex; align-items:center; justify-content:center;
-      padding:18px 0 6px;
+
+    .wrap{
+      min-height: 100svh;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:14px;
+      padding: 20px 14px 28px;
     }
+
     .badge{
       display:inline-flex; gap:10px; align-items:center;
       padding:10px 14px;
-      background: rgba(255,255,255,.55);
+      background: rgba(255,255,255,.35);
       border:1px solid rgba(0,0,0,.06);
       border-radius:999px;
-      box-shadow: 0 8px 24px rgba(0,0,0,.06);
       color:var(--muted);
       font-size:14px;
+      backdrop-filter: blur(8px);
     }
     .badge .dot{width:8px;height:8px;border-radius:999px;background:var(--ink);opacity:.7}
-    .card{
-      background: rgba(255,255,255,.60);
-      border: 1px solid rgba(0,0,0,.06);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      overflow:hidden;
+
+    /* --- Flipbook --- */
+    .stage{
+      width: var(--w);
+      height: var(--h);
+      perspective: 1400px;
+      position: relative;
     }
-    .hero{
-      margin-top:14px;
-    }
-    .img{
+
+    .book{
       width:100%;
+      height:100%;
+      position: relative;
+      transform-style: preserve-3d;
+    }
+
+    .page{
+      position:absolute;
+      inset:0;
+      transform-style: preserve-3d;
+      transform-origin: left center;
+      transition: transform 900ms cubic-bezier(.2,.9,.2,1);
+      border-radius: var(--radius);
+      overflow:hidden;            /* κόβει οτιδήποτε εξέχει */
+      box-shadow: var(--shadow);
+      background: transparent;    /* ΔΕΝ βάζουμε “άσπρο περίγραμμα” */
+    }
+
+    /* Κάθε page έχει δύο πλευρές (front/back) */
+    .side{
+      position:absolute;
+      inset:0;
+      backface-visibility: hidden;
+      background: transparent; /* no white frame */
+    }
+    .side img{
+      width:100%;
+      height:100%;
+      object-fit: cover;
       display:block;
-      height:auto;
+      /* Αν φαίνεται “άσπρο” γύρω-γύρω, συνήθως είναι μέσα στην ίδια τη φωτο.
+         Αυτό εδώ αφαιρεί ΤΟ ΠΕΡΙΓΡΑΜΜΑ του site, όχι το padding που είναι baked στην εικόνα. */
     }
-    .section{
-      margin-top:18px;
+
+    .back{
+      transform: rotateY(180deg);
     }
-    .cta{
-      position: sticky;
-      bottom: 14px;
-      margin-top: 18px;
+
+    /* Στοίβα (z-index) */
+    .page:nth-child(1){z-index:3}
+    .page:nth-child(2){z-index:2}
+    .page:nth-child(3){z-index:1}
+
+    /* όταν έχει γυρίσει */
+    .page.flipped{
+      transform: rotateY(-180deg);
+    }
+
+    /* Controls */
+    .controls{
       display:flex;
+      gap:10px;
+      align-items:center;
       justify-content:center;
-      z-index:10;
-      pointer-events:none;
+      flex-wrap:wrap;
     }
-    .ctaInner{
-      pointer-events:auto;
-      width:min(560px, 100%);
-      display:flex;
-      gap:10px;
-      align-items:center;
-      justify-content:space-between;
-      padding: 12px 12px 12px 14px;
-      background: rgba(255,255,255,.78);
-      border: 1px solid rgba(0,0,0,.08);
-      border-radius: 999px;
-      box-shadow: 0 12px 34px rgba(0,0,0,.12);
-      backdrop-filter: blur(10px);
-    }
-    .ctaInner .txt{
-      line-height:1.1;
-    }
-    .ctaInner .txt b{display:block; font-size:14px}
-    .ctaInner .txt span{display:block; font-size:12.5px; color:var(--muted); margin-top:2px}
-    .btn{
+    button{
       appearance:none;
-      border:0;
-      border-radius: 999px;
-      padding: 12px 16px;
-      background: var(--btn);
-      color: var(--btnText);
-      font-weight: 650;
-      cursor:pointer;
-      text-decoration:none;
-      display:inline-flex;
-      gap:10px;
-      align-items:center;
-      box-shadow: 0 10px 26px rgba(0,0,0,.18);
-      transition: transform .08s ease, opacity .2s ease;
-      white-space:nowrap;
-    }
-    .btn:active{transform: translateY(1px) scale(.99)}
-    .btn.secondary{
-      background: transparent;
+      border:1px solid rgba(0,0,0,.12);
+      background: rgba(255,255,255,.40);
       color: var(--ink);
-      border: 1px solid rgba(0,0,0,.18);
-      box-shadow:none;
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-weight:650;
+      cursor:pointer;
+      backdrop-filter: blur(10px);
+      transition: transform .08s ease, opacity .2s ease;
     }
-    footer{
-      margin-top: 26px;
-      text-align:center;
-      color: var(--muted);
+    button:active{transform: translateY(1px) scale(.99)}
+    button:disabled{opacity:.45; cursor:not-allowed}
+
+    .hint{
       font-size: 12.5px;
-      opacity:.95;
+      color: var(--muted);
+      text-align:center;
+      max-width: 520px;
+      line-height:1.35;
     }
-    .small{
-      font-size:12px;
-      color:var(--muted);
-      margin-top:8px;
+
+    /* Καλύτερη αίσθηση σε κινητό: tap στις σελίδες */
+    .tapzone{
+      position:absolute;
+      top:0; bottom:0;
+      width: 50%;
+      z-index: 50;
+    }
+    .tapzone.right{right:0}
+    .tapzone.left{left:0}
+
+    @media (prefers-reduced-motion: reduce){
+      .page{transition:none}
     }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <header>
-      <div class="badge"><span class="dot"></span> Ψηφιακή Πρόσκληση Γάμου</div>
-    </header>
+    <div class="badge"><span class="dot"></span> Πρόσκληση Γάμου</div>
 
-    <main>
-      <!-- COVER -->
-      <section class="card hero" aria-label="Εξώφυλλο">
-        <img class="img" src="assets/cover.jpg" alt="Save the date – Invitation to follow" />
-      </section>
+    <div class="stage" aria-label="Flipbook">
+      <div class="book" id="book">
+        <!-- Page 1 -->
+        <div class="page" data-page="1">
+          <div class="side front"><img src="assets/cover.jpg" alt="Εξώφυλλο" /></div>
+          <div class="side back"><img src="assets/invite_text.jpg" alt="Ο γάμος μας – κείμενο πρόσκλησης" /></div>
+        </div>
 
-      <!-- INVITE TEXT -->
-      <section class="card section" aria-label="Κείμενο πρόσκλησης">
-        <img class="img" src="assets/invite_text.jpg" alt="Ο γάμος μας – κείμενο πρόσκλησης" />
-      </section>
+        <!-- Page 2 -->
+        <div class="page" data-page="2">
+          <div class="side front"><img src="assets/invite_text.jpg" alt="Ο γάμος μας – κείμενο πρόσκλησης" /></div>
+          <div class="side back"><img src="assets/timeline.jpg" alt="Η ημέρα μας – πρόγραμμα" /></div>
+        </div>
 
-      <!-- TIMELINE -->
-      <section class="card section" aria-label="Η ημέρα μας – πρόγραμμα">
-        <img class="img" src="assets/timeline.jpg" alt="Η ημέρα μας – timeline" />
-      </section>
-
-      <!-- RSVP anchor -->
-      <div id="rsvp"></div>
-
-      <div class="cta" aria-label="RSVP">
-        <div class="ctaInner">
-          <div class="txt">
-            <b>RSVP</b>
-            <span>Δήλωση παρουσίας με ένα κλικ</span>
-          </div>
-          <!-- ΒΑΛΕ ΕΔΩ ΤΟ RSVP LINK ΣΟΥ -->
-          <a class="btn" href="https://example.com/rsvp" target="_blank" rel="noopener">Δήλωσε Συμμετοχή</a>
-          <a class="btn secondary" href="#top" onclick="window.scrollTo({top:0,behavior:'smooth'}); return false;">Πάνω</a>
+        <!-- Page 3 (τελευταία – μόνο front) -->
+        <div class="page" data-page="3">
+          <div class="side front"><img src="assets/timeline.jpg" alt="Η ημέρα μας – πρόγραμμα" /></div>
+          <div class="side back"><img src="assets/timeline.jpg" alt="" /></div>
         </div>
       </div>
 
-      <footer>
-        Αν κάτι δεν ανοίγει σωστά, δοκίμασε από Chrome/Safari ή άνοιξε το link σε νέο tab.
-        <div class="small">Tip: Αν θες, μπορώ να σου το ετοιμάσω και σε PDF ως backup.</div>
-      </footer>
-    </main>
+      <!-- tap zones -->
+      <div class="tapzone left" id="prevTap" aria-hidden="true"></div>
+      <div class="tapzone right" id="nextTap" aria-hidden="true"></div>
+    </div>
+
+    <div class="controls">
+      <button id="prevBtn">◀ Πίσω</button>
+      <button id="nextBtn">Επόμενο ▶</button>
+    </div>
+
+    <div class="hint">
+      Tip: Μπορείς να πατήσεις δεξιά/αριστερά πάνω στο “βιβλίο” για αλλαγή σελίδας.
+      Αν θες ακόμη πιο “flip” (με ήχο/σκιά/διπλή σελίδα), πες μου και το κάνω.
+    </div>
   </div>
 
   <script>
-    // optional: add an id=top anchor
-    document.body.id = "top";
+    (function(){
+      const pages = Array.from(document.querySelectorAll('.page'));
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      const prevTap = document.getElementById('prevTap');
+      const nextTap = document.getElementById('nextTap');
+
+      let index = 0; // 0 = κλειστό στην αρχή (cover)
+      // Θα γυρίζουμε τις σελίδες 1-2. Η 3η είναι “τελευταία” εικόνα.
+
+      function updateButtons(){
+        prevBtn.disabled = index === 0;
+        nextBtn.disabled = index >= 2;
+      }
+
+      function flipNext(){
+        if(index >= 2) return;
+        pages[index].classList.add('flipped');
+        index++;
+        updateButtons();
+      }
+
+      function flipPrev(){
+        if(index <= 0) return;
+        index--;
+        pages[index].classList.remove('flipped');
+        updateButtons();
+      }
+
+      prevBtn.addEventListener('click', flipPrev);
+      nextBtn.addEventListener('click', flipNext);
+      prevTap.addEventListener('click', flipPrev);
+      nextTap.addEventListener('click', flipNext);
+
+      // Επίσης: click πάνω στη σελίδα
+      document.getElementById('book').addEventListener('click', (e)=>{
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        if(x > rect.width/2) flipNext(); else flipPrev();
+      });
+
+      updateButtons();
+    })();
   </script>
 </body>
 </html>
