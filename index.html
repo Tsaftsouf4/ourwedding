@@ -93,20 +93,38 @@
     .coverSide img{ width:100%; height:100%; display:block; object-fit:contain; background:transparent; }
     .coverBack{ transform: rotateY(180deg); }
 
-    /* ===== Mobile single (AUTO-FIT) ===== */
+    /* ===== Mobile single (AUTO-FIT, iOS-safe) ===== */
     .mobileStage{
-      /* fit by both width and height so it never overflows */
-      width: min(92vw, calc((100svh - 190px) / var(--pageAspect)));
-      max-width: 460px;
+      aspect-ratio: 1 / var(--pageAspect);
 
-      height: calc(min(92vw, calc((100svh - 190px) / var(--pageAspect))) * var(--pageAspect));
-      max-height: calc(460px * var(--pageAspect));
+      /* Fit by available height (fix for iOS in-app browsers like Discord) */
+      height: min(
+        calc(100dvh - 170px - env(safe-area-inset-top) - env(safe-area-inset-bottom)),
+        calc(92vw * var(--pageAspect))
+      );
+
+      width: auto;
+      max-width: 92vw;
+      max-height: calc(100dvh - 170px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
 
       perspective: 2200px;
       position: relative;
       margin: 0 auto;
+      overflow: hidden;
       touch-action: manipulation;
     }
+
+    /* fallback if dvh is not supported */
+    @supports not (height: 100dvh){
+      .mobileStage{
+        height: min(
+          calc(100vh - 170px - env(safe-area-inset-top) - env(safe-area-inset-bottom)),
+          calc(92vw * var(--pageAspect))
+        );
+        max-height: calc(100vh - 170px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+      }
+    }
+
     .mobileBook{ position:absolute; inset:0; transform-style: preserve-3d; }
 
     .mobilePage{ position:absolute; inset:0; background:transparent; }
@@ -145,17 +163,12 @@
     .mobileOnly{ display:none; }
 
     @media (max-width: 520px){
-      .wrap{
-        justify-content:flex-start;
-        gap:14px;
-      }
       .desktopOnly{ display:none; }
       .mobileOnly{ display:block; }
 
-      /* make sure the stage + sticky buttons fit nicely */
-      .mobileStage{
-        margin-top: 6px;
-      }
+      /* Keep it visually centered */
+      .wrap{ justify-content:center; gap:14px; }
+
       .controls{
         position: sticky;
         bottom: calc(10px + env(safe-area-inset-bottom));
