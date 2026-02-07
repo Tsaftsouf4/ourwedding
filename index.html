@@ -6,9 +6,9 @@
 <title>Πρόσκληση Γάμου</title>
 
 <style>
-/* ================= RESET ================= */
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html, body {
+
+html, body{
   width: 100%;
   height: 100%;
   overflow: hidden;
@@ -16,13 +16,11 @@ html, body {
   font-family: serif;
 }
 
-/* =============== ROOT VARS =============== */
 :root{
   --pageAspect: 1.45; /* height / width */
   --pageShadow: 0 18px 40px rgba(0,0,0,.25);
 }
 
-/* =============== WRAPPER =============== */
 .wrapper{
   width: 100vw;
   height: 100svh;
@@ -32,23 +30,18 @@ html, body {
   position: relative;
 }
 
-/* =============== BOOK =============== */
 .book{
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 28px;
-  transition: all .3s ease;
 }
 
-/* =============== PAGE SIZE =============== */
-/* Desktop default */
 .page{
   background: transparent;
   box-shadow: var(--pageShadow);
   border-radius: 22px 22px 18px 18px;
   overflow: hidden;
-  transition: transform .45s cubic-bezier(.4,.0,.2,1);
 }
 
 .page img{
@@ -58,7 +51,6 @@ html, body {
   display: block;
 }
 
-/* =============== NAV BUTTONS =============== */
 .nav{
   position: absolute;
   bottom: 26px;
@@ -77,34 +69,21 @@ button{
   backdrop-filter: blur(6px);
 }
 
-/* =============== MOBILE FIX =============== */
+/* MOBILE: μία σελίδα, κεντρικά, μεγάλη αλλά ΠΟΤΕ κομμένη */
 @media (max-width: 900px){
+  .book{ flex-direction: column; }
 
-  .book{
-    flex-direction: column;
-  }
-
-  /* 👇 ΤΟ ΣΗΜΑΝΤΙΚΟ FIX */
   .page{
-    width: min(
-      92vw,
-      calc((100svh - 200px) / var(--pageAspect))
-    );
+    width: min(92vw, calc((100svh - 200px) / var(--pageAspect)));
     height: calc(
-      min(
-        92vw,
-        calc((100svh - 200px) / var(--pageAspect))
-      ) * var(--pageAspect)
+      min(92vw, calc((100svh - 200px) / var(--pageAspect))) * var(--pageAspect)
     );
   }
 
-  /* μόνο μία σελίδα visible */
-  .page.hide-mobile{
-    display: none;
-  }
+  .page.hide-mobile{ display: none; }
 }
 
-/* =============== DESKTOP SIZE =============== */
+/* DESKTOP: διπλή σελίδα */
 @media (min-width: 901px){
   .page{
     width: min(38vw, 420px);
@@ -119,22 +98,20 @@ button{
 <div class="wrapper">
 
   <div class="book" id="book">
-
-    <!-- SAVE THE DATE -->
+    <!-- 1️⃣ Cover -->
     <div class="page">
-      <img src="assets/save.jpg" alt="Save the date">
+      <img src="assets/cover.png" alt="Cover">
     </div>
 
-    <!-- Ο ΓΑΜΟΣ ΜΑΣ -->
+    <!-- 2️⃣ Left -->
     <div class="page hide-mobile">
-      <img src="assets/wedding.jpg" alt="Ο γάμος μας">
+      <img src="assets/left.png" alt="Ο γάμος μας">
     </div>
 
-    <!-- Η ΗΜΕΡΑ ΜΑΣ -->
+    <!-- 3️⃣ Right -->
     <div class="page hide-mobile">
-      <img src="assets/day.jpg" alt="Η ημέρα μας">
+      <img src="assets/right.png" alt="Η ημέρα μας">
     </div>
-
   </div>
 
   <div class="nav">
@@ -144,7 +121,6 @@ button{
 
 </div>
 
-<!-- FLIP SOUND -->
 <audio id="flipSound" src="assets/flip.mp3" preload="auto"></audio>
 
 <script>
@@ -153,18 +129,17 @@ const sound = document.getElementById('flipSound');
 let index = 0;
 
 function update(){
-  pages.forEach((p,i)=>{
-    p.style.display = '';
-    if (window.innerWidth <= 900){
-      p.classList.toggle('hide-mobile', i !== index);
-    }
-  });
+  if (window.innerWidth <= 900){
+    pages.forEach((p,i)=> p.classList.toggle('hide-mobile', i !== index));
+  } else {
+    pages.forEach(p => p.classList.remove('hide-mobile'));
+  }
 }
 
 function playSound(){
   sound.currentTime = 0;
-  sound.playbackRate = 1.35; // πιο γρήγορο flip
-  sound.play();
+  sound.playbackRate = 1.35;
+  sound.play().catch(()=>{});
 }
 
 function next(){
