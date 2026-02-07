@@ -10,23 +10,28 @@
       --bg:#f6ead9;
       --ink:#4a4038;
       --muted:#7a6d63;
-      --shadow: 0 18px 55px rgba(0,0,0,.18);
+
+      /* Compact (A) */
+      --bookW: min(96vw, 980px);
+      --pageAspect: 1.45; /* height / width */
+      --gap: 16px;
       --radius: 22px;
 
-      /* Compact (A): πιο “μαζεμένο” άνοιγμα */
-      --stageW: min(96vw, 920px);
-      --pageAspect: 1.45; /* ύψος/πλάτος (όπως οι κάρτες) */
+      --shadow: 0 18px 55px rgba(0,0,0,.18);
+      --shadowSoft: 0 10px 35px rgba(0,0,0,.14);
     }
+
     *{box-sizing:border-box}
     body{
       margin:0;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
-      background: radial-gradient(900px 520px at 50% -120px, #fff 0%, var(--bg) 58%, #f2dfcb 100%);
+      background: radial-gradient(900px 560px at 50% -140px, #fff 0%, var(--bg) 60%, #f2dfcb 100%);
       color: var(--ink);
       -webkit-font-smoothing:antialiased;
       text-rendering:optimizeLegibility;
       overflow-x:hidden;
     }
+
     .wrap{
       min-height:100svh;
       display:flex;
@@ -36,6 +41,7 @@
       gap:14px;
       padding: 18px 12px 26px;
     }
+
     .badge{
       display:inline-flex; gap:10px; align-items:center;
       padding:10px 14px;
@@ -48,83 +54,128 @@
     }
     .badge .dot{width:8px;height:8px;border-radius:999px;background:var(--ink);opacity:.7}
 
+    /* --- BOOK STAGE --- */
     .stage{
-      width: var(--stageW);
-      max-width: 100%;
-      /* ύψος με βάση “ανοικτό βιβλίο”: 2 σελίδες δίπλα-δίπλα */
-      height: calc((var(--stageW) / 2) * var(--pageAspect));
-      perspective: 1800px;
+      width: var(--bookW);
+      height: calc((var(--bookW) / 2) * var(--pageAspect));
+      perspective: 2200px;
       position: relative;
     }
 
-    /* Το "βιβλίο" */
     .book{
       position:absolute;
       inset:0;
       transform-style: preserve-3d;
     }
 
-    /* Κοινό στυλ “χαρτιού” */
+    /* Paper look */
     .sheet{
       border-radius: var(--radius);
       overflow:hidden;
-      box-shadow: var(--shadow);
       background: var(--bg);
+      box-shadow: var(--shadow);
     }
     .sheet img{
       width:100%;
       height:100%;
       display:block;
-      object-fit: contain;        /* ΟΠΩΣ PDF (no crop) */
+      object-fit: contain;      /* όπως στο PDF */
       background: var(--bg);
     }
 
-    /* Κάλυμμα (μονή σελίδα) */
-    .cover{
-      position:absolute;
-      inset:0;
-      width: calc(var(--stageW) / 2);
-      height: 100%;
-      left: 50%;
-      transform: translateX(-50%);
-      transform-origin: left center;
-      transform-style: preserve-3d;
-      transition: transform 950ms cubic-bezier(.2,.9,.2,1);
-      z-index: 10;
-      backface-visibility: hidden;
-    }
-    .cover.flipped{
-      transform: translateX(-50%) rotateY(-180deg);
-      box-shadow:none;
-    }
-
-    /* Διπλή σελίδα (κάτω από το εξώφυλλο) */
+    /* Spread (pages 2-3) */
     .spread{
       position:absolute;
       inset:0;
       display:grid;
       grid-template-columns: 1fr 1fr;
-      gap: 16px; /* compact (A) */
+      gap: var(--gap);
       padding: 0 6px;
       align-items:stretch;
+      opacity: 0;
+      transform: translateZ(-2px);
+      transition: opacity 320ms ease;
+      pointer-events:none;
     }
-    .page{
-      height:100%;
+    .book.open .spread{
+      opacity: 1;
+      pointer-events:auto;
     }
 
-    /* μικρή “ραχοκοκκαλιά” στο κέντρο */
     .spine{
       position:absolute;
       top: 6px;
       bottom: 6px;
       left: 50%;
-      width: 2px;
+      width: 3px;
       transform: translateX(-50%);
       background: rgba(0,0,0,.06);
       border-radius: 999px;
-      z-index: 2;
+      z-index: 3;
+      pointer-events:none;
+      box-shadow: 0 0 0 1px rgba(255,255,255,.18) inset;
+    }
+
+    /* COVER: right page, flips around spine */
+    .coverWrap{
+      position:absolute;
+      top:0; bottom:0;
+      left:50%;
+      width: calc(var(--bookW) / 2);
+      transform-style: preserve-3d;
+      transform-origin: left center; /* spine */
+      transition: transform 950ms cubic-bezier(.18,.92,.18,1);
+      z-index: 10;
+    }
+    /* closed = cover visible */
+    .book.open .coverWrap{
+      transform: rotateY(-180deg);
+    }
+
+    /* Two sides for the cover (front/back) */
+    .coverSide{
+      position:absolute;
+      inset:0;
+      backface-visibility: hidden;
+    }
+    .coverBack{
+      transform: rotateY(180deg);
+      box-shadow: var(--shadowSoft);
+    }
+
+    /* Realistic page curl / shading */
+    .coverSide::after{
+      content:"";
+      position:absolute;
+      inset:-1px;
+      pointer-events:none;
+      border-radius: var(--radius);
+      background:
+        linear-gradient(90deg,
+          rgba(0,0,0,.18) 0%,
+          rgba(0,0,0,.05) 12%,
+          rgba(0,0,0,0) 40%,
+          rgba(255,255,255,.10) 78%,
+          rgba(255,255,255,.18) 100%);
+      opacity: .22;
+      mix-blend-mode: multiply;
+    }
+
+    /* Moving shadow during flip */
+    .coverShadow{
+      position:absolute;
+      top: 10px;
+      bottom: 10px;
+      left: -12px;
+      right: 12px;
+      border-radius: calc(var(--radius) + 8px);
+      background: radial-gradient(closest-side, rgba(0,0,0,.20), rgba(0,0,0,0));
+      transform: translateZ(-1px);
+      opacity: .18;
+      transition: opacity 350ms ease;
       pointer-events:none;
     }
+    .book.open .coverShadow{opacity:.06;}
 
     /* Controls */
     .controls{
@@ -147,16 +198,16 @@
       transition: transform .08s ease, opacity .2s ease;
     }
     button:active{transform: translateY(1px) scale(.99)}
+    button:disabled{opacity:.45; cursor:not-allowed}
 
     .hint{
       font-size: 12.5px;
       color: var(--muted);
       text-align:center;
-      max-width: 720px;
+      max-width: 760px;
       line-height:1.35;
     }
 
-    /* tap zones */
     .tapzone{
       position:absolute;
       top:0; bottom:0;
@@ -166,16 +217,15 @@
     .tapzone.right{right:0}
     .tapzone.left{left:0}
 
-    /* Mobile: η διπλή σελίδα χωράει, αλλά μικραίνει — κρατάμε compact */
     @media (max-width: 520px){
-      :root{
-        --stageW: min(96vw, 520px);
-      }
-      .spread{ gap: 10px; padding: 0 2px; }
+      :root{ --bookW: min(96vw, 520px); --gap: 10px; }
+      .spread{ padding: 0 2px; }
+      .spine{ width: 2px; }
     }
 
     @media (prefers-reduced-motion: reduce){
-      .cover{transition:none}
+      .coverWrap{transition:none}
+      .spread{transition:none}
     }
   </style>
 </head>
@@ -183,25 +233,33 @@
   <div class="wrap">
     <div class="badge"><span class="dot"></span> Πρόσκληση Γάμου</div>
 
-    <div class="stage" aria-label="Flipbook spread">
-      <div class="book">
-        <!-- Spread κάτω (σελ 2-3 μαζί) -->
+    <div class="stage" aria-label="Flipbook (realistic)">
+      <div class="book" id="book">
+        <!-- Spread κάτω -->
         <div class="spread" aria-label="Διπλή σελίδα">
-          <div class="sheet page" aria-label="Ο γάμος μας">
+          <div class="sheet" aria-label="Ο γάμος μας">
             <img src="assets/invite_text.jpg" alt="Ο γάμος μας" />
           </div>
-          <div class="sheet page" aria-label="Η ημέρα μας">
+          <div class="sheet" aria-label="Η ημέρα μας">
             <img src="assets/timeline.jpg" alt="Η ημέρα μας" />
           </div>
           <div class="spine" aria-hidden="true"></div>
         </div>
 
-        <!-- Cover πάνω (σελ 1) -->
-        <div class="sheet cover" id="cover" aria-label="Save the date">
-          <img src="assets/cover.jpg" alt="Save the date" />
+        <!-- Cover πάνω -->
+        <div class="coverShadow" aria-hidden="true"></div>
+
+        <div class="coverWrap" id="coverWrap" aria-label="Save the date (εξώφυλλο)">
+          <div class="coverSide coverFront sheet">
+            <img src="assets/cover.jpg" alt="Save the date" />
+          </div>
+
+          <!-- Η πίσω πλευρά δείχνει το αριστερό φύλλο (Ο γάμος μας) για να φαίνεται σαν πραγματικό γύρισμα -->
+          <div class="coverSide coverBack sheet">
+            <img src="assets/invite_text.jpg" alt="Ο γάμος μας" />
+          </div>
         </div>
 
-        <!-- tap zones -->
         <div class="tapzone left" id="prevTap" aria-hidden="true"></div>
         <div class="tapzone right" id="nextTap" aria-hidden="true"></div>
       </div>
@@ -218,13 +276,13 @@
     </div>
 
     <audio id="flipSound" preload="auto">
-      <source src="assets/pageflip.wav" type="audio/wav">
+      <source src="assets/flip.wav" type="audio/wav">
     </audio>
   </div>
 
   <script>
     (function(){
-      const cover = document.getElementById('cover');
+      const book = document.getElementById('book');
       const prevBtn = document.getElementById('prevBtn');
       const nextBtn = document.getElementById('nextBtn');
       const prevTap = document.getElementById('prevTap');
@@ -234,46 +292,36 @@
       let open = false;
 
       function playFlip(){
+        // Browsers require user gesture for audio; this is only called from clicks/taps.
         try{
           flipSound.currentTime = 0;
-          flipSound.volume = 0.55; // elegant
+          flipSound.volume = 0.35; // πιο premium / χαμηλό
           flipSound.play();
         }catch(e){}
       }
 
       function setState(isOpen, withSound=true){
         open = isOpen;
-        if(open){
-          cover.classList.add('flipped');
-          prevBtn.disabled = false;
-          nextBtn.disabled = true;
-        } else {
-          cover.classList.remove('flipped');
-          prevBtn.disabled = true;
-          nextBtn.disabled = false;
-        }
+        book.classList.toggle('open', open);
+        prevBtn.disabled = !open;
+        nextBtn.disabled = open;
         if(withSound) playFlip();
       }
 
-      function toggle(toOpen){
-        if(typeof toOpen === 'boolean') setState(toOpen, true);
-        else setState(!open, true);
-      }
+      function openBook(){ if(!open) setState(true, true); }
+      function closeBook(){ if(open) setState(false, true); }
 
-      nextBtn.addEventListener('click', ()=>toggle(true));
-      prevBtn.addEventListener('click', ()=>toggle(false));
-      nextTap.addEventListener('click', ()=>toggle(true));
-      prevTap.addEventListener('click', ()=>toggle(false));
+      nextBtn.addEventListener('click', openBook);
+      prevBtn.addEventListener('click', closeBook);
+      nextTap.addEventListener('click', openBook);
+      prevTap.addEventListener('click', closeBook);
 
-      // click anywhere: right half opens, left half closes
       document.querySelector('.stage').addEventListener('click', (e)=>{
         const rect = e.currentTarget.getBoundingClientRect();
         const x = e.clientX - rect.left;
-        if(x > rect.width/2) toggle(true);
-        else toggle(false);
+        if(x > rect.width/2) openBook(); else closeBook();
       });
 
-      // start closed (cover)
       setState(false, false);
     })();
   </script>
