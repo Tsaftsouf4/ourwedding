@@ -9,9 +9,9 @@
       --bg:#f6ead9;
       --ink:#4a4038;
       --gap: 14px;
-      --pageAspect: 1.45; /* height = width * aspect */
-      --bookW: min(96vw, 980px); /* desktop spread width */
-      --pageW: min(92vw, 520px); /* mobile single width */
+      --pageAspect: 1.45;
+      --bookW: min(96vw, 980px);      /* desktop spread width */
+      --pageW: min(92vw, 420px);      /* mobile single width (FIT, not zoomed) */
     }
     *{box-sizing:border-box}
     body{
@@ -30,10 +30,12 @@
       align-items:center;
       justify-content:center;
       gap:12px;
-      padding-left: calc(10px + env(safe-area-inset-left));
-      padding-right: calc(10px + env(safe-area-inset-right));
+      padding-left: calc(12px + env(safe-area-inset-left));
+      padding-right: calc(12px + env(safe-area-inset-right));
       padding-top: calc(14px + env(safe-area-inset-top));
       padding-bottom: calc(18px + env(safe-area-inset-bottom));
+      margin: 0 auto;
+      max-width: 1100px;
     }
 
     .controls{ display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap:wrap; }
@@ -51,7 +53,7 @@
     button:active{transform: translateY(1px)}
     button:disabled{opacity:.45; cursor:not-allowed}
 
-    /* ===== Desktop spread (as-is) ===== */
+    /* ===== Desktop spread (unchanged) ===== */
     .desktopStage{
       width: var(--bookW);
       height: calc((var(--bookW) / 2) * var(--pageAspect));
@@ -91,7 +93,7 @@
     .coverSide img{ width:100%; height:100%; display:block; object-fit:contain; background:transparent; }
     .coverBack{ transform: rotateY(180deg); }
 
-    /* ===== Mobile single (centered) ===== */
+    /* ===== Mobile single (CENTER + FIT) ===== */
     .mobileStage{
       width: var(--pageW);
       height: calc(var(--pageW) * var(--pageAspect));
@@ -101,18 +103,9 @@
     }
     .mobileBook{ position:absolute; inset:0; transform-style: preserve-3d; }
 
-    .mobilePage{
-      position:absolute; inset:0;
-      background:transparent;
-    }
-    .mobilePage img{
-      width:100%; height:100%;
-      display:block;
-      object-fit:contain;
-      background:transparent;
-    }
+    .mobilePage{ position:absolute; inset:0; background:transparent; }
+    .mobilePage img{ width:100%; height:100%; display:block; object-fit:contain; background:transparent; }
 
-    /* Mobile cover flip (like opening a book) */
     .mCoverWrap{
       position:absolute; inset:0;
       transform-style: preserve-3d;
@@ -124,7 +117,6 @@
     .mCoverSide{ position:absolute; inset:0; backface-visibility:hidden; }
     .mCoverBack{ transform: rotateY(180deg); }
 
-    /* Page turn animation between page 1 and 2 */
     .turner{
       position:absolute; inset:0;
       transform-origin: left center;
@@ -143,27 +135,27 @@
       100%{ transform: rotateY(-165deg); filter: brightness(.92); }
     }
 
-    /* Layout switching */
     .desktopOnly{ display:block; }
     .mobileOnly{ display:none; }
 
     @media (max-width: 520px){
       .wrap{ justify-content:flex-start; gap:14px; }
+      .desktopOnly{ display:none; }
+      .mobileOnly{ display:block; }
+      /* Keep content centered and not overflowing */
+      .mobileStage{ margin-top: 6px; }
       .controls{
         position: sticky;
         bottom: 10px;
         z-index: 60;
         padding-bottom: 6px;
       }
-      .desktopOnly{ display:none; }
-      .mobileOnly{ display:block; }
     }
   </style>
 </head>
 <body>
   <div class="wrap">
 
-    <!-- DESKTOP (spread) -->
     <div class="desktopOnly">
       <div class="desktopStage" aria-label="Flipbook desktop">
         <div class="desktopBook" id="desktopBook">
@@ -171,7 +163,6 @@
             <div class="page"><img src="assets/left.png" alt="Ο γάμος μας" /></div>
             <div class="page"><img src="assets/right.png" alt="Η ημέρα μας" /></div>
           </div>
-
           <div class="coverWrap" aria-label="Save the date">
             <div class="coverSide coverFront"><img src="assets/cover.png" alt="Save the date" /></div>
             <div class="coverSide coverBack"><img src="assets/left.png" alt="Ο γάμος μας" /></div>
@@ -180,21 +171,11 @@
       </div>
     </div>
 
-    <!-- MOBILE (single page centered) -->
     <div class="mobileOnly">
       <div class="mobileStage" aria-label="Flipbook mobile">
         <div class="mobileBook" id="mobileBook">
-          <!-- The "current" page -->
-          <div class="mobilePage" aria-label="Σελίδα">
-            <img id="mobileCurrent" src="assets/left.png" alt="Σελίδα" />
-          </div>
-
-          <!-- Turn animation overlay -->
-          <div class="turner" id="turner" aria-hidden="true">
-            <img id="turnerImg" src="assets/left.png" alt="" />
-          </div>
-
-          <!-- Cover (on top at start) -->
+          <div class="mobilePage"><img id="mobileCurrent" src="assets/left.png" alt="Σελίδα" /></div>
+          <div class="turner" id="turner" aria-hidden="true"><img id="turnerImg" src="assets/left.png" alt="" /></div>
           <div class="mCoverWrap" id="mCover">
             <div class="mCoverSide mCoverFront"><img src="assets/cover.png" alt="Save the date" /></div>
             <div class="mCoverSide mCoverBack"><img src="assets/left.png" alt="Ο γάμος μας" /></div>
@@ -221,22 +202,20 @@
       const flipSound = document.getElementById('flipSound');
 
       const desktopBook = document.getElementById('desktopBook');
-
       const mobileBook = document.getElementById('mobileBook');
-      const mCover = document.getElementById('mCover');
       const mobileCurrent = document.getElementById('mobileCurrent');
       const turner = document.getElementById('turner');
       const turnerImg = document.getElementById('turnerImg');
 
-      const PAGES = ["assets/cover.png","assets/left.png","assets/right.png"]; // 0 cover, 1 left, 2 right
-
+      const PAGES = ["assets/cover.png","assets/left.png","assets/right.png"];
       let audioUnlocked = false;
+
       function unlockAudio(){
         if(audioUnlocked) return;
         audioUnlocked = true;
         try{
           flipSound.volume = 0;
-          flipSound.playbackRate = 1.45;   // faster
+          flipSound.playbackRate = 1.45;
           const p = flipSound.play();
           if(p && p.then){
             p.then(()=>{ flipSound.pause(); flipSound.currentTime = 0; flipSound.volume = 0.28; })
@@ -256,15 +235,10 @@
       }
       window.addEventListener('pointerdown', unlockAudio, { once:true });
 
-      function isMobile(){
-        return window.matchMedia("(max-width: 520px)").matches;
-      }
+      function isMobile(){ return window.matchMedia("(max-width: 520px)").matches; }
 
-      // Desktop state: closed(open=false) or open(open=true)
       let desktopOpen = false;
-
-      // Mobile state index: 0 cover, 1 left, 2 right
-      let mIndex = 0;
+      let mIndex = 0; // 0 cover, 1 left, 2 right
       let busy = false;
 
       function setButtons(){
@@ -283,17 +257,15 @@
         setButtons();
       }
 
-      function mobileShow(index, withTurn){
+      function mobileShow(index){
         if(busy) return;
         if(index === mIndex) return;
         busy = true;
 
-        // Cover open/close handled separately
         if(mIndex === 0 && index === 1){
-          // open cover
           playFlip();
           mobileBook.classList.add("openCover");
-          setTimeout(()=>{ // after cover flip, show page 1
+          setTimeout(()=>{
             mobileCurrent.src = PAGES[1];
             mIndex = 1;
             setButtons();
@@ -302,7 +274,6 @@
           return;
         }
         if(mIndex === 1 && index === 0){
-          // close cover
           playFlip();
           mobileBook.classList.remove("openCover");
           setTimeout(()=>{
@@ -313,12 +284,9 @@
           return;
         }
 
-        // between page 1 and 2: use turn animation
         playFlip();
-        const fromSrc = PAGES[mIndex];
-        turnerImg.src = fromSrc;
+        turnerImg.src = PAGES[mIndex];
         turner.classList.remove("play");
-        // force reflow
         void turner.offsetWidth;
         turner.classList.add("play");
 
@@ -336,25 +304,22 @@
 
       function goNext(){
         if(isMobile()){
-          if(mIndex < 2) mobileShow(mIndex + 1, true);
+          if(mIndex < 2) mobileShow(mIndex + 1);
         }else{
-          desktopSet(true);
-          playFlip();
+          desktopSet(true); playFlip();
         }
       }
       function goPrev(){
         if(isMobile()){
-          if(mIndex > 0) mobileShow(mIndex - 1, true);
+          if(mIndex > 0) mobileShow(mIndex - 1);
         }else{
-          desktopSet(false);
-          playFlip();
+          desktopSet(false); playFlip();
         }
       }
 
       nextBtn.addEventListener("click", goNext);
       prevBtn.addEventListener("click", goPrev);
 
-      // Tap zones (stage click)
       document.addEventListener("click", (e)=>{
         const stage = e.target.closest(".desktopStage, .mobileStage");
         if(!stage) return;
@@ -363,24 +328,6 @@
         if(x > rect.width/2) goNext(); else goPrev();
       });
 
-      // Init
-      function syncLayout(){
-        // Reset visuals for safety when switching orientation
-        if(isMobile()){
-          desktopSet(false);
-          mobileBook.classList.remove("openCover");
-          mIndex = 0;
-          mobileCurrent.src = PAGES[1]; // behind cover
-        }else{
-          desktopSet(false);
-          mobileBook.classList.remove("openCover");
-          mIndex = 0;
-        }
-        setButtons();
-      }
-      window.addEventListener("resize", ()=>{ setButtons(); });
-
-      // Start
       setButtons();
     })();
   </script>
