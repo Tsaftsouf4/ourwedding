@@ -7,15 +7,14 @@
   <meta name="description" content="Ψηφιακή πρόσκληση γάμου" />
   <style>
     :root{
-      --bg:#f6ead9;         /* ζεστό beige όπως οι κάρτες */
-      --ink:#4a4038;
-      --muted:#7a6d63;
+      --bg:#f6ead9;                 /* φόντο σελίδας (σαν το pdf) */
       --shadow: 0 18px 55px rgba(0,0,0,.18);
       --radius: 22px;
-      --w: min(92vw, 520px);          /* πλάτος “βιβλίου” */
-      --h: calc(var(--w) * 1.45);     /* αναλογία */
+      --w: min(92vw, 520px);
+      --h: calc(var(--w) * 1.45);
+      --ink:#4a4038;
+      --muted:#7a6d63;
     }
-
     *{box-sizing:border-box}
     body{
       margin:0;
@@ -26,9 +25,8 @@
       text-rendering:optimizeLegibility;
       overflow-x:hidden;
     }
-
     .wrap{
-      min-height: 100svh;
+      min-height:100svh;
       display:flex;
       flex-direction:column;
       align-items:center;
@@ -36,7 +34,6 @@
       gap:14px;
       padding: 20px 14px 28px;
     }
-
     .badge{
       display:inline-flex; gap:10px; align-items:center;
       padding:10px 14px;
@@ -49,64 +46,47 @@
     }
     .badge .dot{width:8px;height:8px;border-radius:999px;background:var(--ink);opacity:.7}
 
-    /* --- Flipbook --- */
+    /* --- Flipbook (single page, όπως στο PDF) --- */
     .stage{
       width: var(--w);
       height: var(--h);
-      perspective: 1400px;
+      perspective: 1600px;
       position: relative;
     }
-
-    .book{
-      width:100%;
-      height:100%;
-      position: relative;
-      transform-style: preserve-3d;
-    }
-
     .page{
       position:absolute;
       inset:0;
-      transform-style: preserve-3d;
       transform-origin: left center;
+      transform-style: preserve-3d;
       transition: transform 900ms cubic-bezier(.2,.9,.2,1);
       border-radius: var(--radius);
-      overflow:hidden;            /* κόβει οτιδήποτε εξέχει */
-      box-shadow: var(--shadow);
-      background: transparent;    /* ΔΕΝ βάζουμε “άσπρο περίγραμμα” */
+      overflow:hidden;
+      box-shadow: var(--shadow);         /* ίδιο “lift” με το pdf */
+      background: var(--bg);             /* για να μην φαίνεται άσπρο πλαίσιο */
     }
-
-    /* Κάθε page έχει δύο πλευρές (front/back) */
-    .side{
-      position:absolute;
-      inset:0;
-      backface-visibility: hidden;
-      background: transparent; /* no white frame */
-    }
-    .side img{
+    .page img{
       width:100%;
       height:100%;
-      object-fit: cover;
       display:block;
-      /* Αν φαίνεται “άσπρο” γύρω-γύρω, συνήθως είναι μέσα στην ίδια τη φωτο.
-         Αυτό εδώ αφαιρεί ΤΟ ΠΕΡΙΓΡΑΜΜΑ του site, όχι το padding που είναι baked στην εικόνα. */
+      object-fit: contain;               /* ΟΠΩΣ ΣΤΟ PDF: χωρίς crop */
+      background: var(--bg);             /* γεμίζει τυχόν κενά με ίδιο χρώμα */
     }
 
-    .back{
-      transform: rotateY(180deg);
+    /* όταν γυρίσει η σελίδα */
+    .page.flipped{
+      transform: rotateY(-180deg);
+      box-shadow: none;
+    }
+    /* κρύβουμε το πίσω μέρος για να ΜΗΝ φαίνεται “ανάποδα/καθρέφτης” */
+    .page{
+      backface-visibility: hidden;
     }
 
-    /* Στοίβα (z-index) */
+    /* z-index stack */
     .page:nth-child(1){z-index:3}
     .page:nth-child(2){z-index:2}
     .page:nth-child(3){z-index:1}
 
-    /* όταν έχει γυρίσει */
-    .page.flipped{
-      transform: rotateY(-180deg);
-    }
-
-    /* Controls */
     .controls{
       display:flex;
       gap:10px;
@@ -137,7 +117,7 @@
       line-height:1.35;
     }
 
-    /* Καλύτερη αίσθηση σε κινητό: tap στις σελίδες */
+    /* tap zones */
     .tapzone{
       position:absolute;
       top:0; bottom:0;
@@ -157,27 +137,21 @@
     <div class="badge"><span class="dot"></span> Πρόσκληση Γάμου</div>
 
     <div class="stage" aria-label="Flipbook">
-      <div class="book" id="book">
-        <!-- Page 1 -->
-        <div class="page" data-page="1">
-          <div class="side front"><img src="assets/cover.jpg" alt="Εξώφυλλο" /></div>
-          <div class="side back"><img src="assets/invite_text.jpg" alt="Ο γάμος μας – κείμενο πρόσκλησης" /></div>
-        </div>
-
-        <!-- Page 2 -->
-        <div class="page" data-page="2">
-          <div class="side front"><img src="assets/invite_text.jpg" alt="Ο γάμος μας – κείμενο πρόσκλησης" /></div>
-          <div class="side back"><img src="assets/timeline.jpg" alt="Η ημέρα μας – πρόγραμμα" /></div>
-        </div>
-
-        <!-- Page 3 (τελευταία – μόνο front) -->
-        <div class="page" data-page="3">
-          <div class="side front"><img src="assets/timeline.jpg" alt="Η ημέρα μας – πρόγραμμα" /></div>
-          <div class="side back"><img src="assets/timeline.jpg" alt="" /></div>
-        </div>
+      <!-- 1) Save the date (start here) -->
+      <div class="page" data-page="1">
+        <img src="assets/cover.jpg" alt="Save the date" />
       </div>
 
-      <!-- tap zones -->
+      <!-- 2) Ο γάμος μας -->
+      <div class="page" data-page="2">
+        <img src="assets/invite_text.jpg" alt="Ο γάμος μας" />
+      </div>
+
+      <!-- 3) Η ημέρα μας -->
+      <div class="page" data-page="3">
+        <img src="assets/timeline.jpg" alt="Η ημέρα μας" />
+      </div>
+
       <div class="tapzone left" id="prevTap" aria-hidden="true"></div>
       <div class="tapzone right" id="nextTap" aria-hidden="true"></div>
     </div>
@@ -188,38 +162,37 @@
     </div>
 
     <div class="hint">
-      Tip: Μπορείς να πατήσεις δεξιά/αριστερά πάνω στο “βιβλίο” για αλλαγή σελίδας.
-      Αν θες ακόμη πιο “flip” (με ήχο/σκιά/διπλή σελίδα), πες μου και το κάνω.
+      Ξεκινάει από <b>Save the date</b> και μετά πάει στις άλλες δύο σελίδες — όλα <b>όρθια</b>, χωρίς “ανάποδο/καθρέφτισμα”.
     </div>
   </div>
 
   <script>
     (function(){
-      const pages = Array.from(document.querySelectorAll('.page'));
+      const pages = Array.from(document.querySelectorAll('.page')); // [1,2,3] top-to-bottom in DOM but z-index handles stack
       const prevBtn = document.getElementById('prevBtn');
       const nextBtn = document.getElementById('nextBtn');
       const prevTap = document.getElementById('prevTap');
       const nextTap = document.getElementById('nextTap');
 
-      let index = 0; // 0 = κλειστό στην αρχή (cover)
-      // Θα γυρίζουμε τις σελίδες 1-2. Η 3η είναι “τελευταία” εικόνα.
+      let flippedCount = 0; // πόσες σελίδες έχουν γυρίσει (0..2). 0 = βλέπεις το εξώφυλλο.
 
       function updateButtons(){
-        prevBtn.disabled = index === 0;
-        nextBtn.disabled = index >= 2;
+        prevBtn.disabled = flippedCount === 0;
+        nextBtn.disabled = flippedCount >= 2;
       }
 
       function flipNext(){
-        if(index >= 2) return;
-        pages[index].classList.add('flipped');
-        index++;
+        if(flippedCount >= 2) return;
+        // γυρίζουμε την επόμενη “πάνω” σελίδα: 1η, μετά 2η
+        pages[flippedCount].classList.add('flipped');
+        flippedCount++;
         updateButtons();
       }
 
       function flipPrev(){
-        if(index <= 0) return;
-        index--;
-        pages[index].classList.remove('flipped');
+        if(flippedCount <= 0) return;
+        flippedCount--;
+        pages[flippedCount].classList.remove('flipped');
         updateButtons();
       }
 
@@ -228,8 +201,7 @@
       prevTap.addEventListener('click', flipPrev);
       nextTap.addEventListener('click', flipNext);
 
-      // Επίσης: click πάνω στη σελίδα
-      document.getElementById('book').addEventListener('click', (e)=>{
+      document.querySelector('.stage').addEventListener('click', (e)=>{
         const rect = e.currentTarget.getBoundingClientRect();
         const x = e.clientX - rect.left;
         if(x > rect.width/2) flipNext(); else flipPrev();
