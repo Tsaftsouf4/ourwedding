@@ -7,19 +7,21 @@
   <meta name="description" content="Ψηφιακή πρόσκληση γάμου" />
   <style>
     :root{
-      --bg:#f6ead9;                 /* φόντο σελίδας (σαν το pdf) */
-      --shadow: 0 18px 55px rgba(0,0,0,.18);
-      --radius: 22px;
-      --w: min(92vw, 520px);
-      --h: calc(var(--w) * 1.45);
+      --bg:#f6ead9;
       --ink:#4a4038;
       --muted:#7a6d63;
+      --shadow: 0 18px 55px rgba(0,0,0,.18);
+      --radius: 22px;
+
+      /* Compact (A): πιο “μαζεμένο” άνοιγμα */
+      --stageW: min(96vw, 920px);
+      --pageAspect: 1.45; /* ύψος/πλάτος (όπως οι κάρτες) */
     }
     *{box-sizing:border-box}
     body{
       margin:0;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
-      background: var(--bg);
+      background: radial-gradient(900px 520px at 50% -120px, #fff 0%, var(--bg) 58%, #f2dfcb 100%);
       color: var(--ink);
       -webkit-font-smoothing:antialiased;
       text-rendering:optimizeLegibility;
@@ -32,7 +34,7 @@
       align-items:center;
       justify-content:center;
       gap:14px;
-      padding: 20px 14px 28px;
+      padding: 18px 12px 26px;
     }
     .badge{
       display:inline-flex; gap:10px; align-items:center;
@@ -46,47 +48,85 @@
     }
     .badge .dot{width:8px;height:8px;border-radius:999px;background:var(--ink);opacity:.7}
 
-    /* --- Flipbook (single page, όπως στο PDF) --- */
     .stage{
-      width: var(--w);
-      height: var(--h);
-      perspective: 1600px;
+      width: var(--stageW);
+      max-width: 100%;
+      /* ύψος με βάση “ανοικτό βιβλίο”: 2 σελίδες δίπλα-δίπλα */
+      height: calc((var(--stageW) / 2) * var(--pageAspect));
+      perspective: 1800px;
       position: relative;
     }
-    .page{
+
+    /* Το "βιβλίο" */
+    .book{
       position:absolute;
       inset:0;
-      transform-origin: left center;
       transform-style: preserve-3d;
-      transition: transform 900ms cubic-bezier(.2,.9,.2,1);
+    }
+
+    /* Κοινό στυλ “χαρτιού” */
+    .sheet{
       border-radius: var(--radius);
       overflow:hidden;
-      box-shadow: var(--shadow);         /* ίδιο “lift” με το pdf */
-      background: var(--bg);             /* για να μην φαίνεται άσπρο πλαίσιο */
+      box-shadow: var(--shadow);
+      background: var(--bg);
     }
-    .page img{
+    .sheet img{
       width:100%;
       height:100%;
       display:block;
-      object-fit: contain;               /* ΟΠΩΣ ΣΤΟ PDF: χωρίς crop */
-      background: var(--bg);             /* γεμίζει τυχόν κενά με ίδιο χρώμα */
+      object-fit: contain;        /* ΟΠΩΣ PDF (no crop) */
+      background: var(--bg);
     }
 
-    /* όταν γυρίσει η σελίδα */
-    .page.flipped{
-      transform: rotateY(-180deg);
-      box-shadow: none;
-    }
-    /* κρύβουμε το πίσω μέρος για να ΜΗΝ φαίνεται “ανάποδα/καθρέφτης” */
-    .page{
+    /* Κάλυμμα (μονή σελίδα) */
+    .cover{
+      position:absolute;
+      inset:0;
+      width: calc(var(--stageW) / 2);
+      height: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      transform-origin: left center;
+      transform-style: preserve-3d;
+      transition: transform 950ms cubic-bezier(.2,.9,.2,1);
+      z-index: 10;
       backface-visibility: hidden;
     }
+    .cover.flipped{
+      transform: translateX(-50%) rotateY(-180deg);
+      box-shadow:none;
+    }
 
-    /* z-index stack */
-    .page:nth-child(1){z-index:3}
-    .page:nth-child(2){z-index:2}
-    .page:nth-child(3){z-index:1}
+    /* Διπλή σελίδα (κάτω από το εξώφυλλο) */
+    .spread{
+      position:absolute;
+      inset:0;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px; /* compact (A) */
+      padding: 0 6px;
+      align-items:stretch;
+    }
+    .page{
+      height:100%;
+    }
 
+    /* μικρή “ραχοκοκκαλιά” στο κέντρο */
+    .spine{
+      position:absolute;
+      top: 6px;
+      bottom: 6px;
+      left: 50%;
+      width: 2px;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,.06);
+      border-radius: 999px;
+      z-index: 2;
+      pointer-events:none;
+    }
+
+    /* Controls */
     .controls{
       display:flex;
       gap:10px;
@@ -107,13 +147,12 @@
       transition: transform .08s ease, opacity .2s ease;
     }
     button:active{transform: translateY(1px) scale(.99)}
-    button:disabled{opacity:.45; cursor:not-allowed}
 
     .hint{
       font-size: 12.5px;
       color: var(--muted);
       text-align:center;
-      max-width: 520px;
+      max-width: 720px;
       line-height:1.35;
     }
 
@@ -122,13 +161,21 @@
       position:absolute;
       top:0; bottom:0;
       width: 50%;
-      z-index: 50;
+      z-index: 30;
     }
     .tapzone.right{right:0}
     .tapzone.left{left:0}
 
+    /* Mobile: η διπλή σελίδα χωράει, αλλά μικραίνει — κρατάμε compact */
+    @media (max-width: 520px){
+      :root{
+        --stageW: min(96vw, 520px);
+      }
+      .spread{ gap: 10px; padding: 0 2px; }
+    }
+
     @media (prefers-reduced-motion: reduce){
-      .page{transition:none}
+      .cover{transition:none}
     }
   </style>
 </head>
@@ -136,78 +183,98 @@
   <div class="wrap">
     <div class="badge"><span class="dot"></span> Πρόσκληση Γάμου</div>
 
-    <div class="stage" aria-label="Flipbook">
-      <!-- 1) Save the date (start here) -->
-      <div class="page" data-page="1">
-        <img src="assets/cover.jpg" alt="Save the date" />
-      </div>
+    <div class="stage" aria-label="Flipbook spread">
+      <div class="book">
+        <!-- Spread κάτω (σελ 2-3 μαζί) -->
+        <div class="spread" aria-label="Διπλή σελίδα">
+          <div class="sheet page" aria-label="Ο γάμος μας">
+            <img src="assets/invite_text.jpg" alt="Ο γάμος μας" />
+          </div>
+          <div class="sheet page" aria-label="Η ημέρα μας">
+            <img src="assets/timeline.jpg" alt="Η ημέρα μας" />
+          </div>
+          <div class="spine" aria-hidden="true"></div>
+        </div>
 
-      <!-- 2) Ο γάμος μας -->
-      <div class="page" data-page="2">
-        <img src="assets/invite_text.jpg" alt="Ο γάμος μας" />
-      </div>
+        <!-- Cover πάνω (σελ 1) -->
+        <div class="sheet cover" id="cover" aria-label="Save the date">
+          <img src="assets/cover.jpg" alt="Save the date" />
+        </div>
 
-      <!-- 3) Η ημέρα μας -->
-      <div class="page" data-page="3">
-        <img src="assets/timeline.jpg" alt="Η ημέρα μας" />
+        <!-- tap zones -->
+        <div class="tapzone left" id="prevTap" aria-hidden="true"></div>
+        <div class="tapzone right" id="nextTap" aria-hidden="true"></div>
       </div>
-
-      <div class="tapzone left" id="prevTap" aria-hidden="true"></div>
-      <div class="tapzone right" id="nextTap" aria-hidden="true"></div>
     </div>
 
     <div class="controls">
-      <button id="prevBtn">◀ Πίσω</button>
-      <button id="nextBtn">Επόμενο ▶</button>
+      <button id="prevBtn" disabled>◀ Κλείσιμο</button>
+      <button id="nextBtn">Άνοιγμα ▶</button>
     </div>
 
     <div class="hint">
-      Ξεκινάει από <b>Save the date</b> και μετά πάει στις άλλες δύο σελίδες — όλα <b>όρθια</b>, χωρίς “ανάποδο/καθρέφτισμα”.
+      Ξεκινάει από <b>Save the date</b>. Με το γύρισμα ανοίγει η <b>διπλή σελίδα</b>:
+      <b>Ο γάμος μας</b> (αριστερά) + <b>Η ημέρα μας</b> (δεξιά).
     </div>
+
+    <audio id="flipSound" preload="auto">
+      <source src="assets/pageflip.wav" type="audio/wav">
+    </audio>
   </div>
 
   <script>
     (function(){
-      const pages = Array.from(document.querySelectorAll('.page')); // [1,2,3] top-to-bottom in DOM but z-index handles stack
+      const cover = document.getElementById('cover');
       const prevBtn = document.getElementById('prevBtn');
       const nextBtn = document.getElementById('nextBtn');
       const prevTap = document.getElementById('prevTap');
       const nextTap = document.getElementById('nextTap');
+      const flipSound = document.getElementById('flipSound');
 
-      let flippedCount = 0; // πόσες σελίδες έχουν γυρίσει (0..2). 0 = βλέπεις το εξώφυλλο.
+      let open = false;
 
-      function updateButtons(){
-        prevBtn.disabled = flippedCount === 0;
-        nextBtn.disabled = flippedCount >= 2;
+      function playFlip(){
+        try{
+          flipSound.currentTime = 0;
+          flipSound.volume = 0.55; // elegant
+          flipSound.play();
+        }catch(e){}
       }
 
-      function flipNext(){
-        if(flippedCount >= 2) return;
-        // γυρίζουμε την επόμενη “πάνω” σελίδα: 1η, μετά 2η
-        pages[flippedCount].classList.add('flipped');
-        flippedCount++;
-        updateButtons();
+      function setState(isOpen, withSound=true){
+        open = isOpen;
+        if(open){
+          cover.classList.add('flipped');
+          prevBtn.disabled = false;
+          nextBtn.disabled = true;
+        } else {
+          cover.classList.remove('flipped');
+          prevBtn.disabled = true;
+          nextBtn.disabled = false;
+        }
+        if(withSound) playFlip();
       }
 
-      function flipPrev(){
-        if(flippedCount <= 0) return;
-        flippedCount--;
-        pages[flippedCount].classList.remove('flipped');
-        updateButtons();
+      function toggle(toOpen){
+        if(typeof toOpen === 'boolean') setState(toOpen, true);
+        else setState(!open, true);
       }
 
-      prevBtn.addEventListener('click', flipPrev);
-      nextBtn.addEventListener('click', flipNext);
-      prevTap.addEventListener('click', flipPrev);
-      nextTap.addEventListener('click', flipNext);
+      nextBtn.addEventListener('click', ()=>toggle(true));
+      prevBtn.addEventListener('click', ()=>toggle(false));
+      nextTap.addEventListener('click', ()=>toggle(true));
+      prevTap.addEventListener('click', ()=>toggle(false));
 
+      // click anywhere: right half opens, left half closes
       document.querySelector('.stage').addEventListener('click', (e)=>{
         const rect = e.currentTarget.getBoundingClientRect();
         const x = e.clientX - rect.left;
-        if(x > rect.width/2) flipNext(); else flipPrev();
+        if(x > rect.width/2) toggle(true);
+        else toggle(false);
       });
 
-      updateButtons();
+      // start closed (cover)
+      setState(false, false);
     })();
   </script>
 </body>
