@@ -1,118 +1,211 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="el">
 <head>
-<meta charset="UTF-8" />
+<meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>Πρόσκληση Γάμου</title>
 
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{width:100%;height:100%;overflow:hidden;background:#f6ead8;font-family:serif}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:100%;height:100%;overflow:hidden;background:#f6ead8}
 
-:root{
-  --pageAspect: 1.45;     /* height / width */
-  --pageShadow: 0 18px 40px rgba(0,0,0,.25);
-  --radius: 22px;
-}
-
-.wrapper{
-  width:100vw;height:100svh;
-  display:flex;align-items:center;justify-content:center;
-  position:relative;
-}
-
-/* BOOK AREA */
-.book{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:28px;
-  will-change: transform;
-}
-
-/* PAGE */
-.page{
-  background:transparent;
-  box-shadow: var(--pageShadow);
-  border-radius: var(--radius);
-  overflow:hidden;
-  transform-style: preserve-3d;
-}
-
-.page img{
-  width:100%;height:100%;
-  object-fit: contain;
-  display:block;
-}
-
-/* NAV */
-.nav{
-  position:absolute;
-  bottom:26px;
-  display:flex;
-  gap:14px;
-  z-index:10;
-}
-button{
-  background: rgba(255,255,255,.65);
-  border:none;
-  padding:10px 18px;
-  border-radius:999px;
-  font-size:14px;
-  cursor:pointer;
-  backdrop-filter: blur(6px);
-}
-
-/* ===== FLIP ANIMATION ===== */
-@keyframes pageFlip {
-  0%   { transform: perspective(1200px) rotateY(0deg) translateZ(0); }
-  40%  { transform: perspective(1200px) rotateY(-18deg) translateZ(1px); }
-  100% { transform: perspective(1200px) rotateY(0deg) translateZ(0); }
-}
-.flip-anim .page{
-  animation: pageFlip .38s cubic-bezier(.2,.8,.2,1);
-}
-
-/* MOBILE: μία σελίδα, κεντρικά, μεγάλη αλλά ποτέ κομμένη */
-@media (max-width: 900px){
-  .book{ flex-direction: column; gap: 0; }
-  .page{
-    width: min(92vw, calc((100svh - 200px) / var(--pageAspect)));
-    height: calc(
-      min(92vw, calc((100svh - 200px) / var(--pageAspect))) * var(--pageAspect)
-    );
+  :root{
+    --pageAspect: 1.45;             /* height / width */
+    --shadow: 0 18px 40px rgba(0,0,0,.25);
+    --radius: 22px;
+    --bg: #f6ead8;
   }
-  .hide-mobile{ display:none !important; }
-}
 
-/* DESKTOP: όπως πριν -> cover μόνο, μετά διπλή σελίδα */
-@media (min-width: 901px){
-  .page{
-    width: min(38vw, 420px);
-    height: calc(min(38vw, 420px) * var(--pageAspect));
+  .wrap{
+    width:100vw;height:100svh;
+    display:flex;align-items:center;justify-content:center;
+    position:relative;
+    background:var(--bg);
   }
-  .hide-desktop{ display:none !important; }
-}
+
+  /* ===== STAGE / PERSPECTIVE ===== */
+  .stage{
+    position:relative;
+    perspective: 1600px;
+    perspective-origin: 50% 50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+
+  /* ===== LAYOUTS ===== */
+  /* Desktop: cover single OR spread (2 pages) */
+  .spread{
+    display:flex;
+    gap:28px;
+    align-items:center;
+    justify-content:center;
+  }
+
+  .page{
+    border-radius: var(--radius);
+    overflow:hidden;
+    box-shadow: var(--shadow);
+    background:transparent;
+  }
+  .page img{
+    width:100%;height:100%;
+    object-fit:contain;
+    display:block;
+  }
+
+  /* Buttons */
+  .nav{
+    position:absolute;
+    bottom:26px;
+    display:flex;
+    gap:14px;
+    z-index:50;
+  }
+  button{
+    background: rgba(255,255,255,.65);
+    border:none;
+    padding:10px 18px;
+    border-radius:999px;
+    font-size:14px;
+    cursor:pointer;
+    backdrop-filter: blur(6px);
+  }
+
+  /* ===== FLIP LAYER (REAL BOOK TURN) ===== */
+  .flipLayer{
+    position:absolute;
+    top:0;left:0;
+    transform-style: preserve-3d;
+    z-index:40;
+    pointer-events:none;
+    display:none;
+  }
+  .flipLayer.show{ display:block; }
+
+  .sheet{
+    position:absolute;
+    top:0;left:0;
+    width:100%;height:100%;
+    transform-style: preserve-3d;
+    transform-origin: left center;
+  }
+
+  .face{
+    position:absolute;
+    top:0;left:0;
+    width:100%;height:100%;
+    backface-visibility:hidden;
+    border-radius: var(--radius);
+    overflow:hidden;
+    box-shadow: var(--shadow);
+    background:transparent;
+  }
+  .face img{
+    width:100%;height:100%;
+    object-fit:contain;
+    display:block;
+  }
+
+  /* back is mirrored like real paper */
+  .back{
+    transform: rotateY(180deg);
+    filter: brightness(0.98);
+  }
+
+  /* subtle “paper highlight” while flipping */
+  .gloss{
+    position:absolute;inset:0;
+    background: linear-gradient(90deg, rgba(255,255,255,.0), rgba(255,255,255,.35), rgba(255,255,255,.0));
+    opacity:0;
+    pointer-events:none;
+    border-radius: var(--radius);
+  }
+
+  @keyframes turnPage {
+    0%   { transform: rotateY(0deg); }
+    35%  { transform: rotateY(-65deg); }
+    70%  { transform: rotateY(-140deg); }
+    100% { transform: rotateY(-180deg); }
+  }
+
+  @keyframes glossMove {
+    0%   { opacity:0; transform: translateX(-25%); }
+    25%  { opacity:.35; }
+    60%  { opacity:.18; transform: translateX(10%); }
+    100% { opacity:0; transform: translateX(25%); }
+  }
+
+  .turning{ animation: turnPage .62s cubic-bezier(.2,.85,.18,1) forwards; }
+  .turning .gloss{ animation: glossMove .62s cubic-bezier(.2,.85,.18,1) forwards; }
+
+  /* ===== SIZES ===== */
+  /* Desktop sizes */
+  @media (min-width: 901px){
+    .page{
+      width: min(38vw, 420px);
+      height: calc(min(38vw, 420px) * var(--pageAspect));
+    }
+    .stage{
+      width: calc((min(38vw, 420px) * 2) + 28px);
+      height: calc(min(38vw, 420px) * var(--pageAspect));
+    }
+  }
+
+  /* Mobile: one page, centered, large but NEVER cropped */
+  @media (max-width: 900px){
+    .stage{
+      width: min(92vw, calc((100svh - 200px) / var(--pageAspect)));
+      height: calc(
+        min(92vw, calc((100svh - 200px) / var(--pageAspect))) * var(--pageAspect)
+      );
+    }
+    .page{
+      width:100%;
+      height:100%;
+    }
+  }
+
+  .hidden{ display:none !important; }
 </style>
 </head>
 
 <body>
-<div class="wrapper">
+<div class="wrap">
 
-  <div class="book" id="book">
-    <!-- 1 Cover -->
-    <div class="page" id="p0"><img src="assets/cover.png" alt="Cover"></div>
+  <div class="stage" id="stage">
 
-    <!-- 2 Left -->
-    <div class="page" id="p1"><img src="assets/left.png" alt="Ο γάμος μας"></div>
+    <!-- Desktop container -->
+    <div class="spread" id="spreadDesktop">
+      <div class="page" id="desktopLeft"><img id="desktopLeftImg" src="assets/left.png" alt="Ο γάμος μας"></div>
+      <div class="page" id="desktopRight"><img id="desktopRightImg" src="assets/right.png" alt="Η ημέρα μας"></div>
+    </div>
 
-    <!-- 3 Right -->
-    <div class="page" id="p2"><img src="assets/right.png" alt="Η ημέρα μας"></div>
+    <!-- Cover (used in desktop at start + mobile pages) -->
+    <div class="page" id="coverSingle"><img src="assets/cover.png" alt="Cover"></div>
+
+    <!-- Flip layer (the page that turns) -->
+    <div class="flipLayer" id="flipLayer">
+      <div class="sheet" id="sheet">
+        <div class="face front">
+          <img id="frontImg" src="" alt="">
+          <div class="gloss"></div>
+        </div>
+        <div class="face back">
+          <img id="backImg" src="" alt="">
+          <div class="gloss"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mobile page (single) -->
+    <div class="page hidden" id="mobileSingle"><img id="mobileImg" src="" alt=""></div>
+
   </div>
 
   <div class="nav">
-    <button id="btnPrev" onclick="prev()">◀ Πίσω</button>
-    <button id="btnNext" onclick="next()">Μπροστά ▶</button>
+    <button onclick="prev()">◀ Πίσω</button>
+    <button onclick="next()">Μπροστά ▶</button>
   </div>
 
 </div>
@@ -120,95 +213,167 @@ button{
 <audio id="flipSound" src="assets/flip.mp3" preload="auto"></audio>
 
 <script>
-const book  = document.getElementById('book');
-const pages = [document.getElementById('p0'), document.getElementById('p1'), document.getElementById('p2')];
-const sound = document.getElementById('flipSound');
+  const sound = document.getElementById('flipSound');
 
-let indexMobile = 0;  // 0->1->2
-let indexDesktop = 0; // 0 = cover μόνο, 1 = διπλή σελίδα (left+right)
+  const stage = document.getElementById('stage');
+  const spreadDesktop = document.getElementById('spreadDesktop');
+  const coverSingle = document.getElementById('coverSingle');
 
-function isMobile(){ return window.innerWidth <= 900; }
+  const mobileSingle = document.getElementById('mobileSingle');
+  const mobileImg = document.getElementById('mobileImg');
 
-function playFlip(){
-  // πιο γρήγορο/σφιχτό flip sound
-  sound.currentTime = 0;
-  sound.playbackRate = 1.35;
-  sound.play().catch(()=>{});
-}
+  const flipLayer = document.getElementById('flipLayer');
+  const sheet = document.getElementById('sheet');
+  const frontImg = document.getElementById('frontImg');
+  const backImg  = document.getElementById('backImg');
 
-function animateFlip(){
-  book.classList.remove('flip-anim');
-  // force reflow
-  void book.offsetWidth;
-  book.classList.add('flip-anim');
-  setTimeout(()=>book.classList.remove('flip-anim'), 420);
-}
+  const ASSETS = [
+    "assets/cover.png",
+    "assets/left.png",
+    "assets/right.png"
+  ];
 
-function setVisibility(){
-  // reset
-  pages.forEach(p=>{
-    p.classList.remove('hide-mobile','hide-desktop');
+  function isMobile(){ return window.innerWidth <= 900; }
+
+  // Desktop states:
+  // 0 = cover (single)
+  // 1 = spread (left+right)
+  let desktopState = 0;
+
+  // Mobile index: 0 cover, 1 left, 2 right
+  let mobileIndex = 0;
+
+  function playFlip(){
+    sound.currentTime = 0;
+    sound.playbackRate = 1.35; // πιο γρήγορο, πιο “βιβλίο”
+    sound.play().catch(()=>{});
+  }
+
+  function showDesktop(){
+    mobileSingle.classList.add('hidden');
+    spreadDesktop.classList.toggle('hidden', desktopState === 0);
+    coverSingle.classList.toggle('hidden', desktopState !== 0);
+  }
+
+  function showMobile(){
+    spreadDesktop.classList.add('hidden');
+    coverSingle.classList.add('hidden');
+    mobileSingle.classList.remove('hidden');
+    mobileImg.src = ASSETS[mobileIndex];
+  }
+
+  function layout(){
+    if (isMobile()) showMobile();
+    else showDesktop();
+  }
+
+  // REAL page turn animation
+  // fromSrc = current visible page image
+  // toSrc   = next page image (revealed after flip)
+  // flipWidth/Height = size of one page (mobile) or cover page (desktop transition)
+  function doFlip(fromSrc, toSrc, onDone){
+    // Set the flip layer to exactly match the page size
+    const rect = stage.getBoundingClientRect();
+
+    // On mobile: stage is exactly the page size
+    // On desktop: we flip a single page (cover) sized like a page
+    let w, h, left, top;
+
+    if (isMobile()){
+      w = rect.width; h = rect.height; left = 0; top = 0;
+    } else {
+      // flip like a single page in the center (cover -> spread)
+      // Use the coverSingle element size
+      const c = coverSingle.getBoundingClientRect();
+      w = c.width; h = c.height;
+      left = (rect.width - w) / 2;
+      top  = (rect.height - h) / 2;
+    }
+
+    flipLayer.style.width = w + "px";
+    flipLayer.style.height = h + "px";
+    flipLayer.style.transform = `translate(${left}px, ${top}px)`;
+    flipLayer.classList.add('show');
+
+    frontImg.src = fromSrc;
+    backImg.src  = toSrc;
+
+    // reset animation
+    sheet.classList.remove('turning');
+    void sheet.offsetWidth;
+
+    playFlip();
+    sheet.classList.add('turning');
+
+    const done = () => {
+      sheet.removeEventListener('animationend', done);
+      flipLayer.classList.remove('show');
+      sheet.classList.remove('turning');
+      if (onDone) onDone();
+    };
+    sheet.addEventListener('animationend', done);
+  }
+
+  function next(){
+    if (isMobile()){
+      if (mobileIndex >= 2) return;
+      const from = ASSETS[mobileIndex];
+      const to = ASSETS[mobileIndex + 1];
+
+      // flip page from current to next
+      doFlip(from, to, ()=>{
+        mobileIndex++;
+        showMobile();
+      });
+
+    } else {
+      if (desktopState >= 1) return;
+
+      // Desktop: cover -> spread, flip like book page
+      // We flip from cover to left (as “inside reveal”) then show spread
+      doFlip(ASSETS[0], ASSETS[1], ()=>{
+        desktopState = 1;
+        showDesktop();
+      });
+    }
+  }
+
+  function prev(){
+    if (isMobile()){
+      if (mobileIndex <= 0) return;
+      const from = ASSETS[mobileIndex];
+      const to = ASSETS[mobileIndex - 1];
+
+      // flip back (still looks like a page turn)
+      doFlip(from, to, ()=>{
+        mobileIndex--;
+        showMobile();
+      });
+
+    } else {
+      if (desktopState <= 0) return;
+
+      // Desktop: spread -> cover, flip from left to cover
+      doFlip(ASSETS[1], ASSETS[0], ()=>{
+        desktopState = 0;
+        showDesktop();
+      });
+    }
+  }
+
+  window.addEventListener('resize', ()=>{
+    // keep sensible state when switching modes
+    if (isMobile()){
+      // if you were on desktop spread, start at left page on mobile
+      mobileIndex = (desktopState === 0) ? 0 : 1;
+    } else {
+      // if you were past cover on mobile, go to spread on desktop
+      desktopState = (mobileIndex === 0) ? 0 : 1;
+    }
+    layout();
   });
 
-  if (isMobile()){
-    // mobile: δείξε μόνο 1 σελίδα (indexMobile)
-    pages.forEach((p,i)=>{
-      if (i !== indexMobile) p.classList.add('hide-mobile');
-    });
-  } else {
-    // desktop: όπως πριν
-    // indexDesktop=0 -> cover μόνο
-    // indexDesktop=1 -> left+right (διπλή)
-    if (indexDesktop === 0){
-      pages[1].classList.add('hide-desktop');
-      pages[2].classList.add('hide-desktop');
-    } else {
-      pages[0].classList.add('hide-desktop');
-      // left+right visible
-    }
-  }
-}
-
-function next(){
-  if (isMobile()){
-    if (indexMobile < 2){
-      indexMobile++;
-      playFlip(); animateFlip(); setVisibility();
-    }
-  } else {
-    if (indexDesktop < 1){
-      indexDesktop = 1;
-      playFlip(); animateFlip(); setVisibility();
-    }
-  }
-}
-
-function prev(){
-  if (isMobile()){
-    if (indexMobile > 0){
-      indexMobile--;
-      playFlip(); animateFlip(); setVisibility();
-    }
-  } else {
-    if (indexDesktop > 0){
-      indexDesktop = 0;
-      playFlip(); animateFlip(); setVisibility();
-    }
-  }
-}
-
-window.addEventListener('resize', ()=>{
-  // όταν αλλάζει mode, κράτα λογική θέση:
-  // αν πας σε desktop -> αν είσαι σε left/right, πήγαινε στη διπλή
-  if (!isMobile()){
-    indexDesktop = (indexMobile === 0) ? 0 : 1;
-  } else {
-    indexMobile = (indexDesktop === 0) ? 0 : 1; // στη mobile ξεκίνα από left όταν είσαι σε spread
-  }
-  setVisibility();
-});
-
-setVisibility();
+  layout();
 </script>
 </body>
 </html>
