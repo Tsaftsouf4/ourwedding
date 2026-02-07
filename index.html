@@ -9,14 +9,19 @@
     :root{
       --bg1:#f2e6d8;
       --bg2:#f6eadc;
+
       --shadow: 0 24px 60px rgba(0,0,0,.22);
       --radius: 22px;
+
       --cardW: min(1080px, 94vw);
       --cardH: min(640px, 82vh);
+
       --singleW: min(520px, 92vw);
-      --singleH: min(720px, 82vh);
-      --turnDur: 0.90s; /* πιο “paper” */
-      --ease: cubic-bezier(.12,.92,.18,1);
+      --singleH: min(760px, 84vh);
+
+      /* πιο smooth/realistic */
+      --turnDur: 1.05s;
+      --ease: cubic-bezier(.16,.92,.18,1);
     }
 
     *{ box-sizing:border-box; }
@@ -33,7 +38,6 @@
       font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
     }
 
-    /* main wrapper */
     .app{
       width: 100%;
       max-width: 1200px;
@@ -43,7 +47,6 @@
       gap: 14px;
     }
 
-    /* book frame */
     .book{
       position:relative;
       width: var(--cardW);
@@ -57,7 +60,6 @@
       justify-content:center;
     }
 
-    /* stage holds content */
     .stage{
       position:relative;
       width:100%;
@@ -86,10 +88,9 @@
       filter: drop-shadow(0 18px 40px rgba(0,0,0,.18));
       border-radius: 18px;
       transform: translateZ(0);
-      image-rendering: auto;
     }
 
-    /* Single view (mobile) */
+    /* Single view (cover on desktop step0 + all mobile steps) */
     .single{
       width: var(--singleW);
       height: var(--singleH);
@@ -103,7 +104,6 @@
       object-fit: contain;
     }
 
-    /* controls */
     .controls{
       display:flex;
       gap: 12px;
@@ -124,38 +124,27 @@
       user-select:none;
     }
     button:active{ transform: scale(.98); }
-    button:disabled{
-      opacity:.45;
-      cursor:not-allowed;
-    }
+    button:disabled{ opacity:.45; cursor:not-allowed; }
 
-    /* ---------- FLIP LAYER (realistic) ---------- */
+    /* ---------- FLIP LAYER ---------- */
     .flipLayer{
       pointer-events:none;
       position:absolute;
       inset:0;
       display:none;
-      perspective: 1600px;
+      perspective: 1800px;
     }
 
-    /* sheet that flips */
     .sheet{
       position:absolute;
-      top: 18px;
-      left: 18px;
-      right: 18px;
-      bottom: 18px;
+      inset: 18px;
       transform-style: preserve-3d;
       border-radius: var(--radius);
-      overflow: visible;
     }
 
-    /* “paper” half (we flip a single panel area depending on mode) */
     .paper{
       position:absolute;
       top:0; bottom:0;
-      width:50%;
-      transform-origin: left center;
       transform-style: preserve-3d;
       border-radius: 18px;
       will-change: transform;
@@ -172,50 +161,46 @@
       filter: drop-shadow(0 18px 40px rgba(0,0,0,.18));
     }
 
-    /* back face */
-    .paperBack{
-      transform: rotateY(180deg);
-    }
+    .paperBack{ transform: rotateY(180deg); }
 
-    /* glossy highlight */
     .gloss{
       position:absolute;
       inset:-2px;
       border-radius: 18px;
       background: linear-gradient(90deg,
         rgba(255,255,255,0) 0%,
-        rgba(255,255,255,.22) 35%,
-        rgba(255,255,255,.12) 55%,
+        rgba(255,255,255,.18) 35%,
+        rgba(255,255,255,.10) 55%,
         rgba(255,255,255,0) 100%);
       opacity:0;
-      mix-blend-mode: screen;
       pointer-events:none;
+      mix-blend-mode: screen;
     }
 
-    /* spine shadow */
     .spineShadow{
       position:absolute;
       top:0; bottom:0;
-      width: 22px;
-      left: calc(50% - 11px);
+      width: 26px;
+      left: calc(50% - 13px);
       background: radial-gradient(18px 90% at 100% 50%, rgba(0,0,0,.22), rgba(0,0,0,0));
       opacity:0;
     }
 
-    /* keyframes - more “paper” */
+    /* πιο “paper” keyframes */
     @keyframes turnPage {
-      0%   { transform: rotateY(0deg); }
-      20%  { transform: rotateY(-25deg); }
-      45%  { transform: rotateY(-85deg); }
-      70%  { transform: rotateY(-145deg); }
-      100% { transform: rotateY(-180deg); }
+      0%   { transform: translateZ(0px) rotateY(0deg); }
+      18%  { transform: translateZ(10px) rotateY(-22deg); }
+      42%  { transform: translateZ(18px) rotateY(-88deg); }
+      72%  { transform: translateZ(10px) rotateY(-150deg); }
+      100% { transform: translateZ(0px) rotateY(-180deg); }
     }
+
     @keyframes glossMove{
-      0%   { opacity:0; transform: translateX(-35%); }
-      20%  { opacity:.18; }
-      50%  { opacity:.38; transform: translateX(0%); }
-      80%  { opacity:.18; transform: translateX(22%); }
-      100% { opacity:0; transform: translateX(35%); }
+      0%   { opacity:0; transform: translateX(-42%); }
+      18%  { opacity:.15; }
+      50%  { opacity:.35; transform: translateX(0%); }
+      82%  { opacity:.18; transform: translateX(28%); }
+      100% { opacity:0; transform: translateX(42%); }
     }
 
     .turning .paper{
@@ -229,30 +214,28 @@
       transition: opacity .12s ease;
     }
 
-    /* reverse (back) */
-    .reverse .paper{
-      animation-direction: reverse;
-    }
-    .reverse .gloss{
-      animation-direction: reverse;
-    }
+    .reverse .paper{ animation-direction: reverse; }
+    .reverse .gloss{ animation-direction: reverse; }
 
     /* ---------- Responsive ---------- */
     @media (max-width: 900px){
       .book{
         width: min(560px, 94vw);
-        height: min(820px, 84vh);
+        height: min(860px, 84vh);
       }
+      .sheet{ inset:14px; }
       .stage{ padding: 14px; }
+
       .spread{ display:none; }
       .single{ display:flex; }
+
       .spineShadow{ display:none; }
-      .paper{ width:100%; left:0 !important; transform-origin: left center; }
-      .sheet{ inset:14px; }
+      .paper{ width:100% !important; left:0 !important; transform-origin:left center !important; }
     }
 
     @media (min-width: 901px){
-      .single{ display:none; }
+      /* desktop default: both exist, but we show/hide via JS per step */
+      .single{ display:flex; }
       .spread{ display:grid; }
     }
   </style>
@@ -268,19 +251,19 @@
           <img id="rightImg" class="pageImg" alt="right page">
         </div>
 
-        <!-- Mobile single -->
+        <!-- Single (cover on desktop step0 + mobile all steps) -->
         <div class="single" id="single">
           <img id="singleImg" class="pageImg" alt="page">
         </div>
       </div>
 
-      <!-- flip animation overlay -->
+      <!-- flip overlay -->
       <div class="flipLayer" id="flipLayer">
         <div class="sheet" id="sheet">
           <div class="spineShadow" id="spineShadow"></div>
 
           <div class="paper" id="paper">
-            <div class="paperFace paperFront" id="paperFront"></div>
+            <div class="paperFace" id="paperFront"></div>
             <div class="paperFace paperBack" id="paperBack"></div>
             <div class="gloss" id="gloss"></div>
           </div>
@@ -297,14 +280,14 @@
   </div>
 
   <script>
-    // Assets (όπως ακριβώς τα έχεις)
     const ASSETS = {
       cover: "assets/cover.png",
       left:  "assets/left.png",
       right: "assets/right.png"
     };
 
-    const book = document.getElementById("book");
+    const mqMobile = window.matchMedia("(max-width: 900px)");
+
     const spread = document.getElementById("spread");
     const single = document.getElementById("single");
 
@@ -317,111 +300,90 @@
     const paper = document.getElementById("paper");
     const paperFront = document.getElementById("paperFront");
     const paperBack  = document.getElementById("paperBack");
-    const gloss = document.getElementById("gloss");
     const spineShadow = document.getElementById("spineShadow");
 
     const prevBtn = document.getElementById("prevBtn");
     const nextBtn = document.getElementById("nextBtn");
     const sound = document.getElementById("flipSound");
 
-    let isMobile = window.matchMedia("(max-width: 900px)").matches;
+    let isMobile = mqMobile.matches;
     let isAnimating = false;
 
-    // Steps:
-    // Desktop: [0]=cover single, [1]=spread(left+right)
-    // Mobile : [0]=cover, [1]=left, [2]=right
+    // Desktop steps: 0 cover, 1 spread(left+right)
+    // Mobile  steps: 0 cover, 1 left, 2 right
     let step = 0;
 
-    function stepsCount(){
-      return isMobile ? 3 : 2;
-    }
-
-    function clampStep(){
-      const max = stepsCount() - 1;
-      step = Math.max(0, Math.min(step, max));
-    }
+    function stepsCount(){ return isMobile ? 3 : 2; }
 
     function updateButtons(){
       prevBtn.disabled = (step === 0 || isAnimating);
-      nextBtn.disabled = (step === stepsCount() - 1 || isAnimating);
-    }
-
-    function setViewInstant(){
-      if(isMobile){
-        // show single
-        if(step === 0) singleImg.src = ASSETS.cover;
-        if(step === 1) singleImg.src = ASSETS.left;
-        if(step === 2) singleImg.src = ASSETS.right;
-      } else {
-        // desktop: cover or spread
-        if(step === 0){
-          // show cover centered in "single" slot using leftImg as one big (we fake it)
-          leftImg.src = ASSETS.cover;
-          rightImg.src = ""; // empty
-          rightImg.style.opacity = "0";
-          leftImg.style.gridColumn = "1 / span 2";
-          leftImg.style.width = "min(520px, 90%)";
-          leftImg.style.height = "100%";
-          leftImg.style.justifySelf = "center";
-        } else {
-          rightImg.style.opacity = "1";
-          leftImg.style.gridColumn = "";
-          leftImg.style.width = "";
-          leftImg.style.height = "";
-          leftImg.style.justifySelf = "";
-
-          leftImg.src  = ASSETS.left;
-          rightImg.src = ASSETS.right;
-        }
-      }
-      updateButtons();
+      nextBtn.disabled = (step === stepsCount()-1 || isAnimating);
     }
 
     function safePlay(){
       try{
         sound.currentTime = 0;
-        sound.playbackRate = 1.15; // πιο φυσικό
+        sound.playbackRate = 1.2; // λίγο πιο “γρήγορο/σφιχτό”
         sound.play().catch(()=>{});
       }catch(e){}
     }
 
-    // Configure flip overlay geometry
     function setupFlipGeometry(){
-      // show overlay only during animation
       flipLayer.style.display = "none";
+      sheet.classList.remove("turning","reverse");
 
       if(isMobile){
-        // paper takes full single area (we flip the whole page)
         paper.style.left = "0";
         paper.style.width = "100%";
         paper.style.transformOrigin = "left center";
         spineShadow.style.opacity = "0";
       }else{
-        // we flip the RIGHT half on spread transitions
+        // στο desktop γυρνάει η δεξιά “μισή” σελίδα όταν πάμε στο spread
         paper.style.left = "50%";
         paper.style.width = "50%";
         paper.style.transformOrigin = "left center";
       }
     }
 
+    function setViewInstant(){
+      if(isMobile){
+        // mobile: single only
+        spread.style.display = "none";
+        single.style.display = "flex";
+
+        if(step === 0) singleImg.src = ASSETS.cover;
+        if(step === 1) singleImg.src = ASSETS.left;
+        if(step === 2) singleImg.src = ASSETS.right;
+
+      } else {
+        // desktop:
+        if(step === 0){
+          // cover only (single centered)
+          spread.style.display = "none";
+          single.style.display = "flex";
+          singleImg.src = ASSETS.cover;
+        } else {
+          // spread
+          single.style.display = "none";
+          spread.style.display = "grid";
+          leftImg.src = ASSETS.left;
+          rightImg.src = ASSETS.right;
+        }
+      }
+      updateButtons();
+    }
+
     function showFlip(frontImg, backImg, direction){
-      // direction: "next" or "prev"
-      // set paper images
       paperFront.style.backgroundImage = `url("${frontImg}")`;
       paperBack.style.backgroundImage  = `url("${backImg}")`;
 
-      // For desktop, we flip a half-panel:
-      // front/back should be sized like half spread, but our images are full pages,
-      // and object-fit via background-size:contain will still look perfect.
-      // For mobile, full page flip looks right.
-
-      // Reset classes
       sheet.classList.remove("turning","reverse");
-      void sheet.offsetWidth; // reflow
+      void sheet.offsetWidth;
 
       flipLayer.style.display = "block";
       sheet.classList.add("turning");
       if(direction === "prev") sheet.classList.add("reverse");
+
       safePlay();
     }
 
@@ -432,29 +394,28 @@
 
     function animateTo(newStep){
       if(isAnimating) return;
+      if(newStep === step) return;
+      if(newStep < 0 || newStep > stepsCount()-1) return;
+
       const oldStep = step;
-      if(newStep === oldStep) return;
+      const dir = newStep > oldStep ? "next" : "prev";
 
       isAnimating = true;
       updateButtons();
 
-      const dir = newStep > oldStep ? "next" : "prev";
-
-      // Decide front/back images for the flipping "paper"
       let frontImg, backImg;
 
       if(isMobile){
         // flip whole page: old -> new
-        frontImg = (oldStep===0?ASSETS.cover : oldStep===1?ASSETS.left : ASSETS.right);
-        backImg  = (newStep===0?ASSETS.cover : newStep===1?ASSETS.left : ASSETS.right);
+        const getImg = (s)=> s===0?ASSETS.cover : s===1?ASSETS.left : ASSETS.right;
+        frontImg = getImg(oldStep);
+        backImg  = getImg(newStep);
       } else {
-        // desktop:
-        // cover -> spread : flip cover away, show spread behind
-        // spread -> cover : flip right page back to cover (we fake with cover)
-        if(oldStep===0 && newStep===1){
+        // desktop: cover <-> spread
+        if(oldStep === 0 && newStep === 1){
           frontImg = ASSETS.cover;
-          backImg  = ASSETS.right; // visually nice: right page appears as it turns
-        } else if(oldStep===1 && newStep===0){
+          backImg  = ASSETS.right; // φαίνεται ωραίο όταν “ανοίγει”
+        } else if(oldStep === 1 && newStep === 0){
           frontImg = ASSETS.right;
           backImg  = ASSETS.cover;
         } else {
@@ -463,18 +424,16 @@
         }
       }
 
-      // Start flip overlay
       showFlip(frontImg, backImg, dir);
 
-      // During animation, swap the actual view slightly after start for realism
-      const swapAt = Math.round( (parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--turnDur")) || 0.90) * 550 );
+      // swap view περίπου στη μέση για “paper” αίσθηση
+      const swapAt = Math.round(1050 * 0.55);
       setTimeout(()=>{
         step = newStep;
         setViewInstant();
       }, swapAt);
 
-      // End
-      const endAt = Math.round( (parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--turnDur")) || 0.90) * 1000 ) + 40;
+      const endAt = 1050 + 60;
       setTimeout(()=>{
         hideFlip();
         isAnimating = false;
@@ -482,40 +441,35 @@
       }, endAt);
     }
 
-    // Buttons
-    prevBtn.addEventListener("click", ()=> animateTo(step - 1));
-    nextBtn.addEventListener("click", ()=> animateTo(step + 1));
+    prevBtn.addEventListener("click", ()=> animateTo(step-1));
+    nextBtn.addEventListener("click", ()=> animateTo(step+1));
 
-    // Swipe (mobile + desktop)
+    // swipe
     let startX = null;
-    book.addEventListener("touchstart", (e)=>{
+    document.getElementById("book").addEventListener("touchstart", (e)=>{
       if(e.touches && e.touches.length===1) startX = e.touches[0].clientX;
     }, {passive:true});
 
-    book.addEventListener("touchend", (e)=>{
+    document.getElementById("book").addEventListener("touchend", (e)=>{
       if(startX === null) return;
       const endX = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0].clientX : startX;
       const dx = endX - startX;
       startX = null;
       if(Math.abs(dx) < 45) return;
-      if(dx < 0) animateTo(step + 1);
-      else animateTo(step - 1);
+      if(dx < 0) animateTo(step+1);
+      else animateTo(step-1);
     }, {passive:true});
 
-    // Resize handling
+    // resize mode switch
     function handleResize(){
-      const nowMobile = window.matchMedia("(max-width: 900px)").matches;
+      const nowMobile = mqMobile.matches;
       if(nowMobile !== isMobile){
-        // map step between modes
-        // Desktop steps: 0 cover, 1 spread
-        // Mobile steps: 0 cover, 1 left, 2 right
+        // map step
         if(nowMobile){
-          // desktop->mobile
-          // if we were on spread, go to left (step 1) by default
+          // desktop->mobile: αν ήσουν στο spread πήγαινε στο left
           step = (step===1) ? 1 : 0;
-        }else{
-          // mobile->desktop
-          // if we were on right, treat as spread
+        } else {
+          // mobile->desktop: αν ήσουν σε left/right πήγαινε στο spread
           step = (step>=1) ? 1 : 0;
         }
         isMobile = nowMobile;
@@ -526,9 +480,8 @@
 
     window.addEventListener("resize", handleResize);
 
-    // Init
+    // init
     setupFlipGeometry();
-    clampStep();
     setViewInstant();
   </script>
 </body>
