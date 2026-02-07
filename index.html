@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Πρόσκληση Γάμου</title>
+  <meta name="description" content="Ψηφιακή πρόσκληση γάμου" />
+  <style>
+    :root{
+      --bg:#f6ead9;
+      --card:#fff7ee;
+      --ink:#4a4038;
+      --muted:#7a6d63;
+      --btn:#4a4038;
+      --btnText:#ffffff;
+      --shadow: 0 14px 40px rgba(0,0,0,.10);
+      --radius: 26px;
+      --max: 980px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
+      color:var(--ink);
+      background: radial-gradient(1200px 800px at 50% -200px, #fff 0%, var(--bg) 55%, #f3e2cf 100%);
+      -webkit-font-smoothing:antialiased;
+      text-rendering:optimizeLegibility;
+    }
+    a{color:inherit}
+    .wrap{max-width:var(--max); margin:0 auto; padding:24px 18px 60px}
+    header{
+      display:flex; align-items:center; justify-content:center;
+      padding:18px 0 6px;
+    }
+    .badge{
+      display:inline-flex; gap:10px; align-items:center;
+      padding:10px 14px;
+      background: rgba(255,255,255,.55);
+      border:1px solid rgba(0,0,0,.06);
+      border-radius:999px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.06);
+      color:var(--muted);
+      font-size:14px;
+    }
+    .badge .dot{width:8px;height:8px;border-radius:999px;background:var(--ink);opacity:.7}
+    .card{
+      background: rgba(255,255,255,.60);
+      border: 1px solid rgba(0,0,0,.06);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .hero{
+      margin-top:14px;
+    }
+    .img{
+      width:100%;
+      display:block;
+      height:auto;
+    }
+    .section{
+      margin-top:18px;
+    }
+    .cta{
+      position: sticky;
+      bottom: 14px;
+      margin-top: 18px;
+      display:flex;
+      justify-content:center;
+      z-index:10;
+      pointer-events:none;
+    }
+    .ctaInner{
+      pointer-events:auto;
+      width:min(560px, 100%);
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:space-between;
+      padding: 12px 12px 12px 14px;
+      background: rgba(255,255,255,.78);
+      border: 1px solid rgba(0,0,0,.08);
+      border-radius: 999px;
+      box-shadow: 0 12px 34px rgba(0,0,0,.12);
+      backdrop-filter: blur(10px);
+    }
+    .ctaInner .txt{
+      line-height:1.1;
+    }
+    .ctaInner .txt b{display:block; font-size:14px}
+    .ctaInner .txt span{display:block; font-size:12.5px; color:var(--muted); margin-top:2px}
+    .btn{
+      appearance:none;
+      border:0;
+      border-radius: 999px;
+      padding: 12px 16px;
+      background: var(--btn);
+      color: var(--btnText);
+      font-weight: 650;
+      cursor:pointer;
+      text-decoration:none;
+      display:inline-flex;
+      gap:10px;
+      align-items:center;
+      box-shadow: 0 10px 26px rgba(0,0,0,.18);
+      transition: transform .08s ease, opacity .2s ease;
+      white-space:nowrap;
+    }
+    .btn:active{transform: translateY(1px) scale(.99)}
+    .btn.secondary{
+      background: transparent;
+      color: var(--ink);
+      border: 1px solid rgba(0,0,0,.18);
+      box-shadow:none;
+    }
+    footer{
+      margin-top: 26px;
+      text-align:center;
+      color: var(--muted);
+      font-size: 12.5px;
+      opacity:.95;
+    }
+    .small{
+      font-size:12px;
+      color:var(--muted);
+      margin-top:8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="badge"><span class="dot"></span> Ψηφιακή Πρόσκληση Γάμου</div>
+    </header>
+
+    <main>
+      <!-- COVER -->
+      <section class="card hero" aria-label="Εξώφυλλο">
+        <img class="img" src="assets/cover.jpg" alt="Save the date – Invitation to follow" />
+      </section>
+
+      <!-- INVITE TEXT -->
+      <section class="card section" aria-label="Κείμενο πρόσκλησης">
+        <img class="img" src="assets/invite_text.jpg" alt="Ο γάμος μας – κείμενο πρόσκλησης" />
+      </section>
+
+      <!-- TIMELINE -->
+      <section class="card section" aria-label="Η ημέρα μας – πρόγραμμα">
+        <img class="img" src="assets/timeline.jpg" alt="Η ημέρα μας – timeline" />
+      </section>
+
+      <!-- RSVP anchor -->
+      <div id="rsvp"></div>
+
+      <div class="cta" aria-label="RSVP">
+        <div class="ctaInner">
+          <div class="txt">
+            <b>RSVP</b>
+            <span>Δήλωση παρουσίας με ένα κλικ</span>
+          </div>
+          <!-- ΒΑΛΕ ΕΔΩ ΤΟ RSVP LINK ΣΟΥ -->
+          <a class="btn" href="https://example.com/rsvp" target="_blank" rel="noopener">Δήλωσε Συμμετοχή</a>
+          <a class="btn secondary" href="#top" onclick="window.scrollTo({top:0,behavior:'smooth'}); return false;">Πάνω</a>
+        </div>
+      </div>
+
+      <footer>
+        Αν κάτι δεν ανοίγει σωστά, δοκίμασε από Chrome/Safari ή άνοιξε το link σε νέο tab.
+        <div class="small">Tip: Αν θες, μπορώ να σου το ετοιμάσω και σε PDF ως backup.</div>
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    // optional: add an id=top anchor
+    document.body.id = "top";
+  </script>
+</body>
+</html>
