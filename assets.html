@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="el">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Πρόσκληση Γάμου</title>
+  <style>
+    :root{
+      --bg:#f6ead9;
+      --ink:#4a4038;
+      --muted:#7a6d63;
+
+      --bookW: min(96vw, 980px);
+      --pageAspect: 1.45;
+      --gap: 14px;
+      --radius: 22px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
+      background: radial-gradient(900px 560px at 50% -140px, #fff 0%, var(--bg) 60%, #f2dfcb 100%);
+      overflow:hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .wrap{
+      min-height:100svh;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:12px;
+      padding: 14px 10px 18px;
+    }
+
+    .stage{
+      width: var(--bookW);
+      height: calc((var(--bookW) / 2) * var(--pageAspect));
+      perspective: 2600px;
+      position: relative;
+    }
+    .book{ position:absolute; inset:0; transform-style: preserve-3d; }
+
+    .spread{
+      position:absolute;
+      inset:0;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--gap);
+      padding: 0 6px;
+      align-items:stretch;
+      opacity: 0;
+      transition: opacity 220ms ease;
+      pointer-events:none;
+      transform: none;
+    }
+    .book.open .spread{ opacity: 1; pointer-events:auto; }
+
+    /* IMPORTANT: no extra card/shadow — PNG already has it */
+    .page{
+      width:100%;
+      height:100%;
+      border-radius: 0;
+      overflow: visible;
+      background: transparent;
+      box-shadow: none;
+    }
+    .page img{
+      width:100%;
+      height:100%;
+      display:block;
+      object-fit: contain;
+      background: transparent;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: auto;
+    }
+
+    /* optional thin spine (very subtle) */
+    .spine{
+      position:absolute;
+      top: 10px;
+      bottom: 10px;
+      left: 50%;
+      width: 2px;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,.04);
+      border-radius: 999px;
+      pointer-events:none;
+      z-index: 5;
+    }
+
+    .coverWrap{
+      position:absolute;
+      top:0; bottom:0;
+      left:50%;
+      width: calc(var(--bookW) / 2);
+      transform-style: preserve-3d;
+      transform-origin: left center;
+      transition: transform 980ms cubic-bezier(.16,.92,.18,1);
+      z-index: 20;
+    }
+    .book.open .coverWrap{ transform: rotateY(-180deg); }
+
+    .coverSide{
+      position:absolute;
+      inset:0;
+      backface-visibility: hidden;
+      border-radius: 0;
+      overflow: visible;
+      box-shadow: none;       /* PNG already has it */
+      background: transparent;
+    }
+    .coverSide img{
+      width:100%;
+      height:100%;
+      display:block;
+      object-fit: contain;
+      background: transparent;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: auto;
+    }
+    .coverBack{ transform: rotateY(180deg); }
+
+    /* very light page-edge shading only (no big blocks) */
+    .coverSide::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      background: linear-gradient(90deg,
+        rgba(0,0,0,.10) 0%,
+        rgba(0,0,0,.03) 10%,
+        rgba(0,0,0,0) 40%,
+        rgba(255,255,255,.08) 80%,
+        rgba(255,255,255,.12) 100%);
+      opacity:.10;
+      mix-blend-mode:multiply;
+    }
+
+    .controls{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:center;
+      flex-wrap:wrap;
+    }
+    button{
+      appearance:none;
+      border:1px solid rgba(0,0,0,.12);
+      background: rgba(255,255,255,.40);
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-weight:650;
+      cursor:pointer;
+      backdrop-filter: blur(10px);
+    }
+    button:active{transform: translateY(1px)}
+    button:disabled{opacity:.45; cursor:not-allowed}
+
+    @media (max-width: 520px){
+      :root{ --bookW: min(96vw, 520px); --gap: 10px; }
+      .spread{ padding: 0 2px; }
+      .spine{ width: 1px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="stage" aria-label="Flipbook">
+      <div class="book" id="book">
+        <div class="spread" aria-label="Διπλή σελίδα">
+          <div class="page" aria-label="Ο γάμος μας">
+            <img src="assets/left.png" alt="Ο γάμος μας" />
+          </div>
+          <div class="page" aria-label="Η ημέρα μας">
+            <img src="assets/right.png" alt="Η ημέρα μας" />
+          </div>
+          <div class="spine" aria-hidden="true"></div>
+        </div>
+
+        <div class="coverWrap" aria-label="Save the date">
+          <div class="coverSide coverFront">
+            <img src="assets/cover.png" alt="Save the date" />
+          </div>
+          <div class="coverSide coverBack">
+            <img src="assets/left.png" alt="Ο γάμος μας" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button id="prevBtn" disabled>◀ Πίσω</button>
+      <button id="nextBtn">Μπροστά ▶</button>
+    </div>
+
+    <audio id="flipSound" preload="auto">
+      <source src="assets/flip.mp3" type="audio/mpeg">
+      <source src="assets/flip.wav" type="audio/wav">
+    </audio>
+  </div>
+
+  <script>
+    (function(){
+      const book = document.getElementById('book');
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
+      const flipSound = document.getElementById('flipSound');
+
+      let open = false;
+      let audioUnlocked = false;
+
+      function unlockAudio(){
+        if(audioUnlocked) return;
+        audioUnlocked = true;
+        try{
+          flipSound.volume = 0;
+          flipSound.playbackRate = 1.35; // ΠΙΟ ΓΡΗΓΟΡΑ
+          const p = flipSound.play();
+          if(p && p.then){
+            p.then(()=>{ flipSound.pause(); flipSound.currentTime = 0; flipSound.volume = 0.30; })
+             .catch(()=>{ flipSound.volume = 0.30; });
+          }else{
+            flipSound.pause(); flipSound.currentTime = 0; flipSound.volume = 0.30;
+          }
+        }catch(e){
+          flipSound.volume = 0.30;
+        }
+      }
+
+      function playFlip(){
+        try{
+          flipSound.currentTime = 0;
+          flipSound.playbackRate = 1.35;  // ΠΙΟ ΓΡΗΓΟΡΑ
+          flipSound.volume = 0.30;
+          flipSound.play();
+        }catch(e){}
+      }
+
+      function setState(isOpen){
+        // play sound IMMEDIATELY on click
+        playFlip();
+        open = isOpen;
+        book.classList.toggle('open', open);
+        prevBtn.disabled = !open;
+        nextBtn.disabled = open;
+      }
+
+      function openBook(){ if(!open) setState(true); }
+      function closeBook(){ if(open) setState(false); }
+
+      window.addEventListener('pointerdown', unlockAudio, { once: true });
+
+      nextBtn.addEventListener('click', openBook);
+      prevBtn.addEventListener('click', closeBook);
+
+      // click on stage: right=open, left=close
+      document.querySelector('.stage').addEventListener('click', (e)=>{
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        if(x > rect.width/2) openBook(); else closeBook();
+      });
+    })();
+  </script>
+</body>
+</html>
