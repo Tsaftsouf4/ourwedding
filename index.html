@@ -15,9 +15,9 @@
     --radius: 22px;
     --bg: #f6ead8;
 
-    /* “Απλή σελίδα” feel */
-    --turnDur: .45s;
-    --turnEase: cubic-bezier(.2,.85,.2,1);
+    /* Soft page turn tuning */
+    --turnDur: .62s;
+    --turnEase: cubic-bezier(.18,.85,.18,1);
   }
 
   .wrap{
@@ -27,11 +27,12 @@
     background:var(--bg);
   }
 
-  /* ===== STAGE ===== */
+  /* ===== STAGE / PERSPECTIVE ===== */
   .stage{
     position:relative;
-    /* no perspective -> less “book” */
-    perspective: none;
+    /* small perspective = “soft page”, not heavy book */
+    perspective: 1100px;
+    perspective-origin: 50% 50%;
     display:flex;
     align-items:center;
     justify-content:center;
@@ -74,16 +75,13 @@
     cursor:pointer;
     backdrop-filter: blur(6px);
   }
-  button:disabled{
-    opacity:.45;
-    cursor:not-allowed;
-  }
+  button:disabled{ opacity:.45; cursor:not-allowed; }
 
-  /* ===== FLIP LAYER (SIMPLE PAGE TURN) ===== */
+  /* ===== FLIP LAYER (SOFT PAGE CURL) ===== */
   .flipLayer{
     position:absolute;
     top:0;left:0;
-    transform-style: flat; /* no 3d */
+    transform-style: preserve-3d;
     z-index:40;
     pointer-events:none;
     display:none;
@@ -94,10 +92,10 @@
     position:absolute;
     top:0;left:0;
     width:100%;height:100%;
-    transform-origin: 0% 50%;
+    transform-style: preserve-3d;
+    transform-origin: left center;
   }
 
-  /* We keep front/back but use tiny rotation + fade */
   .face{
     position:absolute;
     top:0;left:0;
@@ -114,47 +112,66 @@
     display:block;
   }
 
-  /* back is NOT fully “book mirrored”, just subtle */
+  /* back side (keep it, but not too “mirror book”) */
   .back{
-    transform: none;
-    opacity: 0;
+    transform: rotateY(180deg);
+    filter: brightness(0.985);
   }
 
-  /* very subtle highlight while turning */
+  /* soft highlight */
   .gloss{
     position:absolute;inset:0;
     background: linear-gradient(90deg,
-      rgba(255,255,255,0),
-      rgba(255,255,255,.22),
-      rgba(255,255,255,0)
+      rgba(255,255,255,.0),
+      rgba(255,255,255,.28),
+      rgba(255,255,255,.0)
     );
     opacity:0;
     pointer-events:none;
     border-radius: var(--radius);
   }
 
-  /* Simple “page” animation: small rotate + slide + fade */
-  @keyframes turnPageSimple {
-    0%   { transform: translateX(0) rotateY(0deg);   opacity:1; filter:brightness(1); }
-    60%  { transform: translateX(18px) rotateY(-16deg); opacity:.85; filter:brightness(.985); }
-    100% { transform: translateX(30px) rotateY(-24deg); opacity:0; filter:brightness(.97); }
+  /* edge shadow that appears as page “curls” */
+  .edgeShadow{
+    position:absolute; inset:0;
+    border-radius: var(--radius);
+    pointer-events:none;
+    opacity:0;
+    background: linear-gradient(90deg,
+      rgba(0,0,0,.18),
+      rgba(0,0,0,.05),
+      rgba(0,0,0,0)
+    );
+    mix-blend-mode: multiply;
   }
 
-  @keyframes revealNext {
-    0%   { opacity:0; transform: translateX(-14px); }
-    55%  { opacity:.55; }
-    100% { opacity:1; transform: translateX(0); }
+  /* ===== ANIMATION: SOFT CURL (not full -180 “book”) ===== */
+  @keyframes turnSoft {
+    0%   { transform: rotateY(0deg) translateX(0) scaleX(1) rotateZ(0deg); }
+    20%  { transform: rotateY(-18deg) translateX(2px) scaleX(.995) rotateZ(-.3deg); }
+    45%  { transform: rotateY(-55deg) translateX(8px) scaleX(.975) rotateZ(-.6deg); }
+    70%  { transform: rotateY(-92deg) translateX(14px) scaleX(.955) rotateZ(-.8deg); }
+    100% { transform: rotateY(-118deg) translateX(18px) scaleX(.94) rotateZ(-.9deg); }
   }
 
-  @keyframes glossMoveSimple {
+  @keyframes glossSoft {
     0%   { opacity:0; transform: translateX(-30%); }
-    35%  { opacity:.20; }
-    100% { opacity:0; transform: translateX(30%); }
+    20%  { opacity:.22; }
+    55%  { opacity:.18; transform: translateX(8%); }
+    100% { opacity:0; transform: translateX(35%); }
   }
 
-  .turningFront{ animation: turnPageSimple var(--turnDur) var(--turnEase) forwards; }
-  .revealingBack{ animation: revealNext var(--turnDur) var(--turnEase) forwards; }
-  .turningFront .gloss{ animation: glossMoveSimple var(--turnDur) var(--turnEase) forwards; }
+  @keyframes edgeSoft {
+    0%   { opacity:0; }
+    25%  { opacity:.18; }
+    55%  { opacity:.30; }
+    80%  { opacity:.20; }
+    100% { opacity:0; }
+  }
+
+  .turning{ animation: turnSoft var(--turnDur) var(--turnEase) forwards; }
+  .turning .gloss{ animation: glossSoft var(--turnDur) var(--turnEase) forwards; }
+  .turning .edgeShadow{ animation: edgeSoft var(--turnDur) var(--turnEase) forwards; }
 
   /* ===== SIZES ===== */
   @media (min-width: 901px){
@@ -199,16 +216,18 @@
     <!-- Cover (used in desktop at start + mobile pages) -->
     <div class="page" id="coverSingle"><img src="assets/cover.png" alt="Cover"></div>
 
-    <!-- Flip layer (simple page turn) -->
+    <!-- Flip layer -->
     <div class="flipLayer" id="flipLayer">
       <div class="sheet" id="sheet">
-        <div class="face front" id="frontFace">
+        <div class="face front">
           <img id="frontImg" src="" alt="">
           <div class="gloss"></div>
+          <div class="edgeShadow"></div>
         </div>
-        <div class="face back" id="backFace">
+        <div class="face back">
           <img id="backImg" src="" alt="">
           <div class="gloss"></div>
+          <div class="edgeShadow"></div>
         </div>
       </div>
     </div>
@@ -239,10 +258,6 @@
 
   const flipLayer = document.getElementById('flipLayer');
   const sheet = document.getElementById('sheet');
-
-  const frontFace = document.getElementById('frontFace');
-  const backFace  = document.getElementById('backFace');
-
   const frontImg = document.getElementById('frontImg');
   const backImg  = document.getElementById('backImg');
 
@@ -257,9 +272,7 @@
 
   function isMobile(){ return window.innerWidth <= 900; }
 
-  // Desktop states:
-  // 0 = cover (single)
-  // 1 = spread (left+right)
+  // Desktop states: 0 cover, 1 spread
   let desktopState = 0;
 
   // Mobile index: 0 cover, 1 left, 2 right
@@ -267,7 +280,7 @@
 
   function playFlip(){
     sound.currentTime = 0;
-    sound.playbackRate = 1.15; // πιο “μαλακό” από πριν
+    sound.playbackRate = 1.25; // πιο “μαλακό” (όχι τόσο βιβλίο)
     sound.play().catch(()=>{});
   }
 
@@ -301,9 +314,9 @@
     else showDesktop();
   }
 
-  // SIMPLE page turn animation (not “book”)
-  // fromSrc = current visible page image
-  // toSrc   = next page image
+  // Soft page curl flip:
+  // fromSrc = current page image
+  // toSrc   = next page image (appears on back side)
   function doFlip(fromSrc, toSrc, onDone){
     const rect = stage.getBoundingClientRect();
 
@@ -312,6 +325,7 @@
     if (isMobile()){
       w = rect.width; h = rect.height; left = 0; top = 0;
     } else {
+      // flip a single page in the center (cover -> spread)
       const c = coverSingle.getBoundingClientRect();
       w = c.width; h = c.height;
       left = (rect.width - w) / 2;
@@ -326,27 +340,20 @@
     frontImg.src = fromSrc;
     backImg.src  = toSrc;
 
-    // reset classes
-    frontFace.classList.remove('turningFront');
-    backFace.classList.remove('revealingBack');
+    // reset animation
+    sheet.classList.remove('turning');
     void sheet.offsetWidth;
 
     playFlip();
-
-    // animate: front “leaves”, back “appears”
-    frontFace.classList.add('turningFront');
-    backFace.classList.add('revealingBack');
+    sheet.classList.add('turning');
 
     const done = () => {
-      frontFace.removeEventListener('animationend', done);
+      sheet.removeEventListener('animationend', done);
       flipLayer.classList.remove('show');
-      frontFace.classList.remove('turningFront');
-      backFace.classList.remove('revealingBack');
+      sheet.classList.remove('turning');
       if (onDone) onDone();
     };
-
-    // listen on front end (same duration)
-    frontFace.addEventListener('animationend', done);
+    sheet.addEventListener('animationend', done);
   }
 
   function next(){
@@ -362,6 +369,8 @@
 
     } else {
       if (desktopState >= 1) return;
+
+      // cover -> spread (reveal left)
       doFlip(ASSETS[0], ASSETS[1], ()=>{
         desktopState = 1;
         showDesktop();
@@ -382,6 +391,8 @@
 
     } else {
       if (desktopState <= 0) return;
+
+      // spread -> cover (use left -> cover)
       doFlip(ASSETS[1], ASSETS[0], ()=>{
         desktopState = 0;
         showDesktop();
