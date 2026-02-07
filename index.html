@@ -15,7 +15,6 @@
     --radius: 22px;
     --bg: #f6ead8;
 
-    /* magazine feel */
     --turnDur: .74s;
     --turnEase: cubic-bezier(.16,.9,.18,1);
   }
@@ -27,7 +26,6 @@
     background:var(--bg);
   }
 
-  /* just enough perspective for “thin page” */
   .stage{
     position:relative;
     perspective: 1400px;
@@ -74,7 +72,7 @@
   }
   button:disabled{ opacity:.45; cursor:not-allowed; }
 
-  /* ===== UNDER PAGE (next page visible behind turn) ===== */
+  /* ===== UNDER PAGE ===== */
   .underPage{
     position:absolute;
     top:0;left:0;
@@ -94,7 +92,7 @@
     display:block;
   }
 
-  /* ===== FLIP LAYER (MAGAZINE CURL) ===== */
+  /* ===== FLIP LAYER ===== */
   .flipLayer{
     position:absolute;
     top:0;left:0;
@@ -130,43 +128,37 @@
     display:block;
   }
 
-  /* We animate only the current page (front) */
   .back{ display:none; }
 
-  /* Magazine-style highlight */
   .specular{
     position:absolute; inset:-2px;
     border-radius: var(--radius);
     pointer-events:none;
     opacity:0;
-    background:
-      linear-gradient(90deg,
-        rgba(255,255,255,0) 0%,
-        rgba(255,255,255,.06) 30%,
-        rgba(255,255,255,.22) 48%,
-        rgba(255,255,255,.06) 63%,
-        rgba(255,255,255,0) 100%
-      );
+    background: linear-gradient(90deg,
+      rgba(255,255,255,0) 0%,
+      rgba(255,255,255,.06) 30%,
+      rgba(255,255,255,.22) 48%,
+      rgba(255,255,255,.06) 63%,
+      rgba(255,255,255,0) 100%
+    );
     mix-blend-mode: screen;
   }
 
-  /* shadow near curl */
   .curlShadow{
     position:absolute; inset:0;
     border-radius: var(--radius);
     pointer-events:none;
     opacity:0;
-    background:
-      radial-gradient(120% 90% at 18% 50%,
-        rgba(0,0,0,.22) 0%,
-        rgba(0,0,0,.10) 30%,
-        rgba(0,0,0,0) 62%
-      );
+    background: radial-gradient(120% 90% at 18% 50%,
+      rgba(0,0,0,.22) 0%,
+      rgba(0,0,0,.10) 30%,
+      rgba(0,0,0,0) 62%
+    );
     filter: blur(1.2px);
     mix-blend-mode: multiply;
   }
 
-  /* EXTRA: curvature shading for “floppy magazine” */
   .bendShade{
     position:absolute; inset:0;
     border-radius: var(--radius);
@@ -199,7 +191,6 @@
     filter: blur(.6px);
   }
 
-  /* subtle “page edge” */
   .edge{
     position:absolute;
     top:0; bottom:0; left:0;
@@ -213,7 +204,6 @@
     pointer-events:none;
   }
 
-  /* ===== KEYFRAMES: floppy magazine bend + curl ===== */
   @keyframes magazineTurn {
     0%{
       transform: rotateY(0deg) translateX(0) skewY(0deg) rotateZ(0deg) scaleX(1) scaleY(1);
@@ -222,50 +212,22 @@
     }
     20%{
       transform: rotateY(-22deg) translateX(3px) skewY(-1.1deg) rotateZ(-.35deg) scaleX(.992) scaleY(.998);
-      clip-path: polygon(
-        0 0,
-        96% 0,
-        100% 14%,
-        100% 86%,
-        96% 100%,
-        0 100%
-      );
+      clip-path: polygon(0 0, 96% 0, 100% 14%, 100% 86%, 96% 100%, 0 100%);
       filter: brightness(.997) saturate(1);
     }
     50%{
       transform: rotateY(-62deg) translateX(12px) skewY(-2.6deg) rotateZ(-.7deg) scaleX(.968) scaleY(.995);
-      clip-path: polygon(
-        0 0,
-        82% 0,
-        100% 24%,
-        100% 76%,
-        82% 100%,
-        0 100%
-      );
+      clip-path: polygon(0 0, 82% 0, 100% 24%, 100% 76%, 82% 100%, 0 100%);
       filter: brightness(.992) saturate(.995);
     }
     78%{
       transform: rotateY(-96deg) translateX(20px) skewY(-3.2deg) rotateZ(-.95deg) scaleX(.945) scaleY(.99);
-      clip-path: polygon(
-        0 0,
-        72% 0,
-        100% 34%,
-        100% 66%,
-        72% 100%,
-        0 100%
-      );
+      clip-path: polygon(0 0, 72% 0, 100% 34%, 100% 66%, 72% 100%, 0 100%);
       filter: brightness(.988) saturate(.99);
     }
     100%{
       transform: rotateY(-112deg) translateX(26px) skewY(-3.4deg) rotateZ(-1.05deg) scaleX(.93) scaleY(.988);
-      clip-path: polygon(
-        0 0,
-        64% 0,
-        100% 40%,
-        100% 60%,
-        64% 100%,
-        0 100%
-      );
+      clip-path: polygon(0 0, 64% 0, 100% 40%, 100% 60%, 64% 100%, 0 100%);
       filter: brightness(.985) saturate(.99);
     }
   }
@@ -306,9 +268,7 @@
     100%{opacity:0}
   }
 
-  .turning{
-    animation: magazineTurn var(--turnDur) var(--turnEase) forwards;
-  }
+  .turning{ animation: magazineTurn var(--turnDur) var(--turnEase) forwards; }
   .turning .specular{ animation: specularMove var(--turnDur) var(--turnEase) forwards; }
   .turning .curlShadow{ animation: curlShadowMove var(--turnDur) var(--turnEase) forwards; }
   .turning .bendShade{ animation: bendShadeMove var(--turnDur) var(--turnEase) forwards; }
@@ -327,12 +287,11 @@
     }
   }
 
+  /* FIXED mobile sizing: no -200px (works portrait/landscape) */
   @media (max-width: 900px){
     .stage{
-      width: min(92vw, calc((100svh - 200px) / var(--pageAspect)));
-      height: calc(
-        min(92vw, calc((100svh - 200px) / var(--pageAspect))) * var(--pageAspect)
-      );
+      width: min(92vw, calc(92svh / var(--pageAspect)));
+      height: calc(min(92vw, calc(92svh / var(--pageAspect))) * var(--pageAspect));
     }
     .page{ width:100%; height:100%; }
   }
@@ -345,27 +304,15 @@
 <div class="wrap">
   <div class="stage" id="stage">
 
-    <!-- Desktop container -->
     <div class="spread" id="spreadDesktop">
-      <div class="page" id="desktopLeft">
-        <img id="desktopLeftImg" src="assets/left.png" alt="Ο γάμος μας">
-      </div>
-      <div class="page" id="desktopRight">
-        <img id="desktopRightImg" src="assets/right.png" alt="Η ημέρα μας">
-      </div>
+      <div class="page" id="desktopLeft"><img src="assets/left.png" alt="Ο γάμος μας"></div>
+      <div class="page" id="desktopRight"><img src="assets/right.png" alt="Η ημέρα μας"></div>
     </div>
 
-    <!-- Cover -->
-    <div class="page" id="coverSingle">
-      <img src="assets/cover.png" alt="Cover">
-    </div>
+    <div class="page" id="coverSingle"><img src="assets/cover.png" alt="Cover"></div>
 
-    <!-- Under page (the next page visible immediately) -->
-    <div class="underPage" id="underPage">
-      <img id="underImg" src="" alt="">
-    </div>
+    <div class="underPage" id="underPage"><img id="underImg" src="" alt=""></div>
 
-    <!-- Flip layer (only current page turning away) -->
     <div class="flipLayer" id="flipLayer">
       <div class="sheet" id="sheet">
         <div class="face front">
@@ -380,10 +327,7 @@
       </div>
     </div>
 
-    <!-- Mobile single -->
-    <div class="page hidden" id="mobileSingle">
-      <img id="mobileImg" src="" alt="">
-    </div>
+    <div class="page hidden" id="mobileSingle"><img id="mobileImg" src="" alt=""></div>
 
   </div>
 
@@ -415,19 +359,15 @@
   const prevBtn = document.getElementById('prevBtn');
   const nextBtn = document.getElementById('nextBtn');
 
-  const ASSETS = [
-    "assets/cover.png",
-    "assets/left.png",
-    "assets/right.png"
-  ];
+  const ASSETS = ["assets/cover.png","assets/left.png","assets/right.png"];
 
-  function isMobile(){ return window.innerWidth <= 900; }
+  // FIX: treat landscape phones as mobile too
+  function isMobile(){
+    return window.matchMedia("(max-width: 900px)").matches || Math.min(window.innerWidth, window.innerHeight) <= 900;
+  }
 
-  // Desktop states: 0 cover, 1 spread
-  let desktopState = 0;
-  // Mobile index: 0 cover, 1 left, 2 right
-  let mobileIndex = 0;
-
+  let desktopState = 0;   // 0 cover, 1 spread
+  let mobileIndex = 0;    // 0 cover, 1 left, 2 right
   let busy = false;
 
   function playFlip(){
@@ -472,7 +412,6 @@
     el.style.transform = `translate(${left}px, ${top}px)`;
   }
 
-  // Magazine curl flip: show NEXT under, animate CURRENT on top
   function doFlip(currentSrc, nextSrc, onDone){
     if (busy) return;
     busy = true;
@@ -490,17 +429,14 @@
       top  = (rect.height - h) / 2;
     }
 
-    // Under page visible immediately
     underImg.src = nextSrc;
     placeOverStage(underPage, w, h, left, top);
     underPage.classList.add('show');
 
-    // Turning layer on top
     frontImg.src = currentSrc;
     placeOverStage(flipLayer, w, h, left, top);
     flipLayer.classList.add('show');
 
-    // reset animation
     sheet.classList.remove('turning');
     void sheet.offsetWidth;
 
@@ -510,13 +446,10 @@
     const done = () => {
       sheet.removeEventListener('animationend', done);
       sheet.classList.remove('turning');
-
       flipLayer.classList.remove('show');
       underPage.classList.remove('show');
-
       busy = false;
       updateButtons();
-
       if (onDone) onDone();
     };
 
@@ -532,7 +465,6 @@
       });
     } else {
       if (desktopState >= 1 || busy) return;
-      // cover -> spread (reveal left)
       doFlip(ASSETS[0], ASSETS[1], ()=>{
         desktopState = 1;
         showDesktop();
@@ -549,7 +481,6 @@
       });
     } else {
       if (desktopState <= 0 || busy) return;
-      // spread -> cover
       doFlip(ASSETS[1], ASSETS[0], ()=>{
         desktopState = 0;
         showDesktop();
