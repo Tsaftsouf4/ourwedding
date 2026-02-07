@@ -10,14 +10,14 @@
   html,body{width:100%;height:100%;overflow:hidden;background:#f6ead8}
 
   :root{
-    --pageAspect: 1.45;             /* height / width */
+    --pageAspect: 1.45;
     --shadow: 0 18px 40px rgba(0,0,0,.22);
     --radius: 22px;
     --bg: #f6ead8;
 
-    /* Soft page turn tuning */
-    --turnDur: .62s;
-    --turnEase: cubic-bezier(.18,.85,.18,1);
+    /* magazine feel */
+    --turnDur: .74s;
+    --turnEase: cubic-bezier(.16,.9,.18,1);
   }
 
   .wrap{
@@ -27,18 +27,16 @@
     background:var(--bg);
   }
 
-  /* ===== STAGE / PERSPECTIVE ===== */
+  /* just enough perspective for “thin page” */
   .stage{
     position:relative;
-    /* small perspective = “soft page”, not heavy book */
-    perspective: 1100px;
+    perspective: 1400px;
     perspective-origin: 50% 50%;
     display:flex;
     align-items:center;
     justify-content:center;
   }
 
-  /* ===== LAYOUTS ===== */
   .spread{
     display:flex;
     gap:28px;
@@ -58,7 +56,6 @@
     display:block;
   }
 
-  /* Buttons */
   .nav{
     position:absolute;
     bottom:26px;
@@ -77,7 +74,7 @@
   }
   button:disabled{ opacity:.45; cursor:not-allowed; }
 
-  /* ===== FLIP LAYER (SOFT PAGE CURL) ===== */
+  /* ===== FLIP LAYER (MAGAZINE PAGE CURL) ===== */
   .flipLayer{
     position:absolute;
     top:0;left:0;
@@ -88,12 +85,16 @@
   }
   .flipLayer.show{ display:block; }
 
+  /* The turning sheet */
   .sheet{
     position:absolute;
     top:0;left:0;
     width:100%;height:100%;
     transform-style: preserve-3d;
     transform-origin: left center;
+
+    /* helps the clip-path animation look smoother */
+    will-change: transform, filter, clip-path;
   }
 
   .face{
@@ -112,66 +113,148 @@
     display:block;
   }
 
-  /* back side (keep it, but not too “mirror book”) */
+  /* back side */
   .back{
     transform: rotateY(180deg);
-    filter: brightness(0.985);
+    filter: brightness(.99) contrast(.99);
   }
 
-  /* soft highlight */
-  .gloss{
-    position:absolute;inset:0;
-    background: linear-gradient(90deg,
-      rgba(255,255,255,.0),
-      rgba(255,255,255,.28),
-      rgba(255,255,255,.0)
-    );
-    opacity:0;
-    pointer-events:none;
+  /* Magazine-style highlight: narrow & sharp-ish */
+  .specular{
+    position:absolute; inset:-2px;
     border-radius: var(--radius);
+    pointer-events:none;
+    opacity:0;
+    background:
+      linear-gradient(90deg,
+        rgba(255,255,255,0) 0%,
+        rgba(255,255,255,.06) 30%,
+        rgba(255,255,255,.22) 48%,
+        rgba(255,255,255,.06) 63%,
+        rgba(255,255,255,0) 100%
+      );
+    mix-blend-mode: screen;
   }
 
-  /* edge shadow that appears as page “curls” */
-  .edgeShadow{
+  /* Soft shadow that grows near the curl edge */
+  .curlShadow{
     position:absolute; inset:0;
     border-radius: var(--radius);
     pointer-events:none;
     opacity:0;
-    background: linear-gradient(90deg,
-      rgba(0,0,0,.18),
-      rgba(0,0,0,.05),
-      rgba(0,0,0,0)
-    );
+    background:
+      radial-gradient(120% 90% at 18% 50%,
+        rgba(0,0,0,.22) 0%,
+        rgba(0,0,0,.10) 30%,
+        rgba(0,0,0,0) 62%
+      );
+    filter: blur(1.2px);
     mix-blend-mode: multiply;
   }
 
-  /* ===== ANIMATION: SOFT CURL (not full -180 “book”) ===== */
-  @keyframes turnSoft {
-    0%   { transform: rotateY(0deg) translateX(0) scaleX(1) rotateZ(0deg); }
-    20%  { transform: rotateY(-18deg) translateX(2px) scaleX(.995) rotateZ(-.3deg); }
-    45%  { transform: rotateY(-55deg) translateX(8px) scaleX(.975) rotateZ(-.6deg); }
-    70%  { transform: rotateY(-92deg) translateX(14px) scaleX(.955) rotateZ(-.8deg); }
-    100% { transform: rotateY(-118deg) translateX(18px) scaleX(.94) rotateZ(-.9deg); }
+  /* “Page thickness” illusion (very subtle) */
+  .edge{
+    position:absolute;
+    top:0; bottom:0; left:0;
+    width:10px;
+    opacity:0;
+    background: linear-gradient(90deg,
+      rgba(255,255,255,.35),
+      rgba(255,255,255,.08),
+      rgba(255,255,255,0)
+    );
+    pointer-events:none;
   }
 
-  @keyframes glossSoft {
-    0%   { opacity:0; transform: translateX(-30%); }
-    20%  { opacity:.22; }
-    55%  { opacity:.18; transform: translateX(8%); }
-    100% { opacity:0; transform: translateX(35%); }
+  /* ===== KEYFRAMES: bend + curl (magazine) =====
+     We animate:
+     - transform: small rotateY + a bit of translate + slight skew (flex)
+     - clip-path: makes the “curved rolling edge”
+     The curve moves from left to right gradually.
+  */
+  @keyframes magazineTurn {
+    0%{
+      transform: rotateY(0deg) translateX(0) skewY(0deg) scaleX(1);
+      clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+      filter: brightness(1);
+    }
+    18%{
+      transform: rotateY(-18deg) translateX(2px) skewY(-.35deg) scaleX(.995);
+      clip-path: polygon(
+        0 0,
+        100% 0,
+        100% 100%,
+        0 100%
+      );
+      filter: brightness(.997);
+    }
+    45%{
+      transform: rotateY(-55deg) translateX(10px) skewY(-.9deg) scaleX(.975);
+      /* Curved bite on the right edge (looks like soft curl) */
+      clip-path: polygon(
+        0 0,
+        92% 0,
+        100% 18%,
+        100% 82%,
+        92% 100%,
+        0 100%
+      );
+      filter: brightness(.993);
+    }
+    72%{
+      transform: rotateY(-92deg) translateX(18px) skewY(-1.2deg) scaleX(.95);
+      clip-path: polygon(
+        0 0,
+        78% 0,
+        100% 30%,
+        100% 70%,
+        78% 100%,
+        0 100%
+      );
+      filter: brightness(.988);
+    }
+    100%{
+      transform: rotateY(-122deg) translateX(24px) skewY(-1.35deg) scaleX(.93);
+      clip-path: polygon(
+        0 0,
+        68% 0,
+        100% 36%,
+        100% 64%,
+        68% 100%,
+        0 100%
+      );
+      filter: brightness(.985);
+    }
   }
 
-  @keyframes edgeSoft {
-    0%   { opacity:0; }
-    25%  { opacity:.18; }
-    55%  { opacity:.30; }
-    80%  { opacity:.20; }
-    100% { opacity:0; }
+  @keyframes specularMove{
+    0%   { opacity:0; transform: translateX(-35%); }
+    18%  { opacity:.12; }
+    52%  { opacity:.30; transform: translateX(6%); }
+    80%  { opacity:.18; transform: translateX(26%); }
+    100% { opacity:0; transform: translateX(40%); }
   }
 
-  .turning{ animation: turnSoft var(--turnDur) var(--turnEase) forwards; }
-  .turning .gloss{ animation: glossSoft var(--turnDur) var(--turnEase) forwards; }
-  .turning .edgeShadow{ animation: edgeSoft var(--turnDur) var(--turnEase) forwards; }
+  @keyframes curlShadowMove{
+    0%   { opacity:0; transform: translateX(-6px); }
+    30%  { opacity:.10; }
+    55%  { opacity:.24; transform: translateX(8px); }
+    100% { opacity:0; transform: translateX(18px); }
+  }
+
+  @keyframes edgeOn{
+    0%{opacity:0}
+    35%{opacity:.10}
+    60%{opacity:.16}
+    100%{opacity:0}
+  }
+
+  .turning{
+    animation: magazineTurn var(--turnDur) var(--turnEase) forwards;
+  }
+  .turning .specular{ animation: specularMove var(--turnDur) var(--turnEase) forwards; }
+  .turning .curlShadow{ animation: curlShadowMove var(--turnDur) var(--turnEase) forwards; }
+  .turning .edge{ animation: edgeOn var(--turnDur) var(--turnEase) forwards; }
 
   /* ===== SIZES ===== */
   @media (min-width: 901px){
@@ -221,13 +304,15 @@
       <div class="sheet" id="sheet">
         <div class="face front">
           <img id="frontImg" src="" alt="">
-          <div class="gloss"></div>
-          <div class="edgeShadow"></div>
+          <div class="specular"></div>
+          <div class="curlShadow"></div>
+          <div class="edge"></div>
         </div>
         <div class="face back">
           <img id="backImg" src="" alt="">
-          <div class="gloss"></div>
-          <div class="edgeShadow"></div>
+          <div class="specular"></div>
+          <div class="curlShadow"></div>
+          <div class="edge"></div>
         </div>
       </div>
     </div>
@@ -274,13 +359,12 @@
 
   // Desktop states: 0 cover, 1 spread
   let desktopState = 0;
-
   // Mobile index: 0 cover, 1 left, 2 right
   let mobileIndex = 0;
 
   function playFlip(){
     sound.currentTime = 0;
-    sound.playbackRate = 1.25; // πιο “μαλακό” (όχι τόσο βιβλίο)
+    sound.playbackRate = 1.18; // πιο “περιοδικό”
     sound.play().catch(()=>{});
   }
 
@@ -314,18 +398,14 @@
     else showDesktop();
   }
 
-  // Soft page curl flip:
-  // fromSrc = current page image
-  // toSrc   = next page image (appears on back side)
+  // Magazine curl flip
   function doFlip(fromSrc, toSrc, onDone){
     const rect = stage.getBoundingClientRect();
-
     let w, h, left, top;
 
     if (isMobile()){
       w = rect.width; h = rect.height; left = 0; top = 0;
     } else {
-      // flip a single page in the center (cover -> spread)
       const c = coverSingle.getBoundingClientRect();
       w = c.width; h = c.height;
       left = (rect.width - w) / 2;
@@ -359,18 +439,12 @@
   function next(){
     if (isMobile()){
       if (mobileIndex >= 2) return;
-      const from = ASSETS[mobileIndex];
-      const to = ASSETS[mobileIndex + 1];
-
-      doFlip(from, to, ()=>{
+      doFlip(ASSETS[mobileIndex], ASSETS[mobileIndex + 1], ()=>{
         mobileIndex++;
         showMobile();
       });
-
     } else {
       if (desktopState >= 1) return;
-
-      // cover -> spread (reveal left)
       doFlip(ASSETS[0], ASSETS[1], ()=>{
         desktopState = 1;
         showDesktop();
@@ -381,18 +455,12 @@
   function prev(){
     if (isMobile()){
       if (mobileIndex <= 0) return;
-      const from = ASSETS[mobileIndex];
-      const to = ASSETS[mobileIndex - 1];
-
-      doFlip(from, to, ()=>{
+      doFlip(ASSETS[mobileIndex], ASSETS[mobileIndex - 1], ()=>{
         mobileIndex--;
         showMobile();
       });
-
     } else {
       if (desktopState <= 0) return;
-
-      // spread -> cover (use left -> cover)
       doFlip(ASSETS[1], ASSETS[0], ()=>{
         desktopState = 0;
         showDesktop();
