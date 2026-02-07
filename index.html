@@ -1,379 +1,535 @@
 <!doctype html>
 <html lang="el">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Πρόσκληση Γάμου</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Wedding Invite</title>
 
-<style>
-  *{box-sizing:border-box;margin:0;padding:0}
-  html,body{width:100%;height:100%;overflow:hidden;background:#f6ead8}
-
-  :root{
-    --pageAspect: 1.45;             /* height / width */
-    --shadow: 0 18px 40px rgba(0,0,0,.25);
-    --radius: 22px;
-    --bg: #f6ead8;
-  }
-
-  .wrap{
-    width:100vw;height:100svh;
-    display:flex;align-items:center;justify-content:center;
-    position:relative;
-    background:var(--bg);
-  }
-
-  /* ===== STAGE / PERSPECTIVE ===== */
-  .stage{
-    position:relative;
-    perspective: 1600px;
-    perspective-origin: 50% 50%;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-  }
-
-  /* ===== LAYOUTS ===== */
-  /* Desktop: cover single OR spread (2 pages) */
-  .spread{
-    display:flex;
-    gap:28px;
-    align-items:center;
-    justify-content:center;
-  }
-
-  .page{
-    border-radius: var(--radius);
-    overflow:hidden;
-    box-shadow: var(--shadow);
-    background:transparent;
-  }
-  .page img{
-    width:100%;height:100%;
-    object-fit:contain;
-    display:block;
-  }
-
-  /* Buttons */
-  .nav{
-    position:absolute;
-    bottom:26px;
-    display:flex;
-    gap:14px;
-    z-index:50;
-  }
-  button{
-    background: rgba(255,255,255,.65);
-    border:none;
-    padding:10px 18px;
-    border-radius:999px;
-    font-size:14px;
-    cursor:pointer;
-    backdrop-filter: blur(6px);
-  }
-
-  /* ===== FLIP LAYER (REAL BOOK TURN) ===== */
-  .flipLayer{
-    position:absolute;
-    top:0;left:0;
-    transform-style: preserve-3d;
-    z-index:40;
-    pointer-events:none;
-    display:none;
-  }
-  .flipLayer.show{ display:block; }
-
-  .sheet{
-    position:absolute;
-    top:0;left:0;
-    width:100%;height:100%;
-    transform-style: preserve-3d;
-    transform-origin: left center;
-  }
-
-  .face{
-    position:absolute;
-    top:0;left:0;
-    width:100%;height:100%;
-    backface-visibility:hidden;
-    border-radius: var(--radius);
-    overflow:hidden;
-    box-shadow: var(--shadow);
-    background:transparent;
-  }
-  .face img{
-    width:100%;height:100%;
-    object-fit:contain;
-    display:block;
-  }
-
-  /* back is mirrored like real paper */
-  .back{
-    transform: rotateY(180deg);
-    filter: brightness(0.98);
-  }
-
-  /* subtle “paper highlight” while flipping */
-  .gloss{
-    position:absolute;inset:0;
-    background: linear-gradient(90deg, rgba(255,255,255,.0), rgba(255,255,255,.35), rgba(255,255,255,.0));
-    opacity:0;
-    pointer-events:none;
-    border-radius: var(--radius);
-  }
-
-  @keyframes turnPage {
-    0%   { transform: rotateY(0deg); }
-    35%  { transform: rotateY(-65deg); }
-    70%  { transform: rotateY(-140deg); }
-    100% { transform: rotateY(-180deg); }
-  }
-
-  @keyframes glossMove {
-    0%   { opacity:0; transform: translateX(-25%); }
-    25%  { opacity:.35; }
-    60%  { opacity:.18; transform: translateX(10%); }
-    100% { opacity:0; transform: translateX(25%); }
-  }
-
-  .turning{ animation: turnPage .62s cubic-bezier(.2,.85,.18,1) forwards; }
-  .turning .gloss{ animation: glossMove .62s cubic-bezier(.2,.85,.18,1) forwards; }
-
-  /* ===== SIZES ===== */
-  /* Desktop sizes */
-  @media (min-width: 901px){
-    .page{
-      width: min(38vw, 420px);
-      height: calc(min(38vw, 420px) * var(--pageAspect));
+  <style>
+    :root{
+      --bg1:#f2e6d8;
+      --bg2:#f6eadc;
+      --shadow: 0 24px 60px rgba(0,0,0,.22);
+      --radius: 22px;
+      --cardW: min(1080px, 94vw);
+      --cardH: min(640px, 82vh);
+      --singleW: min(520px, 92vw);
+      --singleH: min(720px, 82vh);
+      --turnDur: 0.90s; /* πιο “paper” */
+      --ease: cubic-bezier(.12,.92,.18,1);
     }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      min-height:100svh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 18px 14px;
+      background: radial-gradient(1200px 700px at 50% 20%, var(--bg2), var(--bg1));
+      overflow:hidden;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+
+    /* main wrapper */
+    .app{
+      width: 100%;
+      max-width: 1200px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      gap: 14px;
+    }
+
+    /* book frame */
+    .book{
+      position:relative;
+      width: var(--cardW);
+      height: var(--cardH);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.12);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    /* stage holds content */
     .stage{
-      width: calc((min(38vw, 420px) * 2) + 28px);
-      height: calc(min(38vw, 420px) * var(--pageAspect));
-    }
-  }
-
-  /* Mobile: one page, centered, large but NEVER cropped */
-  @media (max-width: 900px){
-    .stage{
-      width: min(92vw, calc((100svh - 200px) / var(--pageAspect)));
-      height: calc(
-        min(92vw, calc((100svh - 200px) / var(--pageAspect))) * var(--pageAspect)
-      );
-    }
-    .page{
+      position:relative;
       width:100%;
       height:100%;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding: 18px;
     }
-  }
 
-  .hidden{ display:none !important; }
-</style>
+    /* Desktop spread */
+    .spread{
+      width:100%;
+      height:100%;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      align-items:center;
+      justify-items:center;
+    }
+
+    .pageImg{
+      width:100%;
+      height:100%;
+      object-fit: contain;
+      filter: drop-shadow(0 18px 40px rgba(0,0,0,.18));
+      border-radius: 18px;
+      transform: translateZ(0);
+      image-rendering: auto;
+    }
+
+    /* Single view (mobile) */
+    .single{
+      width: var(--singleW);
+      height: var(--singleH);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .single .pageImg{
+      width:100%;
+      height:100%;
+      object-fit: contain;
+    }
+
+    /* controls */
+    .controls{
+      display:flex;
+      gap: 12px;
+      align-items:center;
+      justify-content:center;
+    }
+    button{
+      appearance:none;
+      border:0;
+      background: rgba(255,255,255,.55);
+      color:#2b2b2b;
+      padding: 12px 18px;
+      border-radius: 999px;
+      font-weight: 650;
+      box-shadow: 0 10px 24px rgba(0,0,0,.12);
+      cursor:pointer;
+      transition: transform .08s ease, opacity .15s ease;
+      user-select:none;
+    }
+    button:active{ transform: scale(.98); }
+    button:disabled{
+      opacity:.45;
+      cursor:not-allowed;
+    }
+
+    /* ---------- FLIP LAYER (realistic) ---------- */
+    .flipLayer{
+      pointer-events:none;
+      position:absolute;
+      inset:0;
+      display:none;
+      perspective: 1600px;
+    }
+
+    /* sheet that flips */
+    .sheet{
+      position:absolute;
+      top: 18px;
+      left: 18px;
+      right: 18px;
+      bottom: 18px;
+      transform-style: preserve-3d;
+      border-radius: var(--radius);
+      overflow: visible;
+    }
+
+    /* “paper” half (we flip a single panel area depending on mode) */
+    .paper{
+      position:absolute;
+      top:0; bottom:0;
+      width:50%;
+      transform-origin: left center;
+      transform-style: preserve-3d;
+      border-radius: 18px;
+      will-change: transform;
+    }
+
+    .paperFace{
+      position:absolute;
+      inset:0;
+      border-radius: 18px;
+      backface-visibility:hidden;
+      background-repeat:no-repeat;
+      background-position:center;
+      background-size: contain;
+      filter: drop-shadow(0 18px 40px rgba(0,0,0,.18));
+    }
+
+    /* back face */
+    .paperBack{
+      transform: rotateY(180deg);
+    }
+
+    /* glossy highlight */
+    .gloss{
+      position:absolute;
+      inset:-2px;
+      border-radius: 18px;
+      background: linear-gradient(90deg,
+        rgba(255,255,255,0) 0%,
+        rgba(255,255,255,.22) 35%,
+        rgba(255,255,255,.12) 55%,
+        rgba(255,255,255,0) 100%);
+      opacity:0;
+      mix-blend-mode: screen;
+      pointer-events:none;
+    }
+
+    /* spine shadow */
+    .spineShadow{
+      position:absolute;
+      top:0; bottom:0;
+      width: 22px;
+      left: calc(50% - 11px);
+      background: radial-gradient(18px 90% at 100% 50%, rgba(0,0,0,.22), rgba(0,0,0,0));
+      opacity:0;
+    }
+
+    /* keyframes - more “paper” */
+    @keyframes turnPage {
+      0%   { transform: rotateY(0deg); }
+      20%  { transform: rotateY(-25deg); }
+      45%  { transform: rotateY(-85deg); }
+      70%  { transform: rotateY(-145deg); }
+      100% { transform: rotateY(-180deg); }
+    }
+    @keyframes glossMove{
+      0%   { opacity:0; transform: translateX(-35%); }
+      20%  { opacity:.18; }
+      50%  { opacity:.38; transform: translateX(0%); }
+      80%  { opacity:.18; transform: translateX(22%); }
+      100% { opacity:0; transform: translateX(35%); }
+    }
+
+    .turning .paper{
+      animation: turnPage var(--turnDur) var(--ease) forwards;
+    }
+    .turning .gloss{
+      animation: glossMove var(--turnDur) var(--ease) forwards;
+    }
+    .turning .spineShadow{
+      opacity:.55;
+      transition: opacity .12s ease;
+    }
+
+    /* reverse (back) */
+    .reverse .paper{
+      animation-direction: reverse;
+    }
+    .reverse .gloss{
+      animation-direction: reverse;
+    }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 900px){
+      .book{
+        width: min(560px, 94vw);
+        height: min(820px, 84vh);
+      }
+      .stage{ padding: 14px; }
+      .spread{ display:none; }
+      .single{ display:flex; }
+      .spineShadow{ display:none; }
+      .paper{ width:100%; left:0 !important; transform-origin: left center; }
+      .sheet{ inset:14px; }
+    }
+
+    @media (min-width: 901px){
+      .single{ display:none; }
+      .spread{ display:grid; }
+    }
+  </style>
 </head>
 
 <body>
-<div class="wrap">
-
-  <div class="stage" id="stage">
-
-    <!-- Desktop container -->
-    <div class="spread" id="spreadDesktop">
-      <div class="page" id="desktopLeft"><img id="desktopLeftImg" src="assets/left.png" alt="Ο γάμος μας"></div>
-      <div class="page" id="desktopRight"><img id="desktopRightImg" src="assets/right.png" alt="Η ημέρα μας"></div>
-    </div>
-
-    <!-- Cover (used in desktop at start + mobile pages) -->
-    <div class="page" id="coverSingle"><img src="assets/cover.png" alt="Cover"></div>
-
-    <!-- Flip layer (the page that turns) -->
-    <div class="flipLayer" id="flipLayer">
-      <div class="sheet" id="sheet">
-        <div class="face front">
-          <img id="frontImg" src="" alt="">
-          <div class="gloss"></div>
+  <div class="app">
+    <div class="book" id="book">
+      <div class="stage">
+        <!-- Desktop spread -->
+        <div class="spread" id="spread">
+          <img id="leftImg" class="pageImg" alt="left page">
+          <img id="rightImg" class="pageImg" alt="right page">
         </div>
-        <div class="face back">
-          <img id="backImg" src="" alt="">
-          <div class="gloss"></div>
+
+        <!-- Mobile single -->
+        <div class="single" id="single">
+          <img id="singleImg" class="pageImg" alt="page">
+        </div>
+      </div>
+
+      <!-- flip animation overlay -->
+      <div class="flipLayer" id="flipLayer">
+        <div class="sheet" id="sheet">
+          <div class="spineShadow" id="spineShadow"></div>
+
+          <div class="paper" id="paper">
+            <div class="paperFace paperFront" id="paperFront"></div>
+            <div class="paperFace paperBack" id="paperBack"></div>
+            <div class="gloss" id="gloss"></div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- Mobile page (single) -->
-    <div class="page hidden" id="mobileSingle"><img id="mobileImg" src="" alt=""></div>
+    <div class="controls">
+      <button id="prevBtn">◀ Πίσω</button>
+      <button id="nextBtn">Μπροστά ▶</button>
+    </div>
 
+    <audio id="flipSound" src="assets/flip.mp3" preload="auto"></audio>
   </div>
 
-  <div class="nav">
-    <button onclick="prev()">◀ Πίσω</button>
-    <button onclick="next()">Μπροστά ▶</button>
-  </div>
-
-</div>
-
-<audio id="flipSound" src="assets/flip.mp3" preload="auto"></audio>
-
-<script>
-  const sound = document.getElementById('flipSound');
-
-  const stage = document.getElementById('stage');
-  const spreadDesktop = document.getElementById('spreadDesktop');
-  const coverSingle = document.getElementById('coverSingle');
-
-  const mobileSingle = document.getElementById('mobileSingle');
-  const mobileImg = document.getElementById('mobileImg');
-
-  const flipLayer = document.getElementById('flipLayer');
-  const sheet = document.getElementById('sheet');
-  const frontImg = document.getElementById('frontImg');
-  const backImg  = document.getElementById('backImg');
-
-  const ASSETS = [
-    "assets/cover.png",
-    "assets/left.png",
-    "assets/right.png"
-  ];
-
-  function isMobile(){ return window.innerWidth <= 900; }
-
-  // Desktop states:
-  // 0 = cover (single)
-  // 1 = spread (left+right)
-  let desktopState = 0;
-
-  // Mobile index: 0 cover, 1 left, 2 right
-  let mobileIndex = 0;
-
-  function playFlip(){
-    sound.currentTime = 0;
-    sound.playbackRate = 1.35; // πιο γρήγορο, πιο “βιβλίο”
-    sound.play().catch(()=>{});
-  }
-
-  function showDesktop(){
-    mobileSingle.classList.add('hidden');
-    spreadDesktop.classList.toggle('hidden', desktopState === 0);
-    coverSingle.classList.toggle('hidden', desktopState !== 0);
-  }
-
-  function showMobile(){
-    spreadDesktop.classList.add('hidden');
-    coverSingle.classList.add('hidden');
-    mobileSingle.classList.remove('hidden');
-    mobileImg.src = ASSETS[mobileIndex];
-  }
-
-  function layout(){
-    if (isMobile()) showMobile();
-    else showDesktop();
-  }
-
-  // REAL page turn animation
-  // fromSrc = current visible page image
-  // toSrc   = next page image (revealed after flip)
-  // flipWidth/Height = size of one page (mobile) or cover page (desktop transition)
-  function doFlip(fromSrc, toSrc, onDone){
-    // Set the flip layer to exactly match the page size
-    const rect = stage.getBoundingClientRect();
-
-    // On mobile: stage is exactly the page size
-    // On desktop: we flip a single page (cover) sized like a page
-    let w, h, left, top;
-
-    if (isMobile()){
-      w = rect.width; h = rect.height; left = 0; top = 0;
-    } else {
-      // flip like a single page in the center (cover -> spread)
-      // Use the coverSingle element size
-      const c = coverSingle.getBoundingClientRect();
-      w = c.width; h = c.height;
-      left = (rect.width - w) / 2;
-      top  = (rect.height - h) / 2;
-    }
-
-    flipLayer.style.width = w + "px";
-    flipLayer.style.height = h + "px";
-    flipLayer.style.transform = `translate(${left}px, ${top}px)`;
-    flipLayer.classList.add('show');
-
-    frontImg.src = fromSrc;
-    backImg.src  = toSrc;
-
-    // reset animation
-    sheet.classList.remove('turning');
-    void sheet.offsetWidth;
-
-    playFlip();
-    sheet.classList.add('turning');
-
-    const done = () => {
-      sheet.removeEventListener('animationend', done);
-      flipLayer.classList.remove('show');
-      sheet.classList.remove('turning');
-      if (onDone) onDone();
+  <script>
+    // Assets (όπως ακριβώς τα έχεις)
+    const ASSETS = {
+      cover: "assets/cover.png",
+      left:  "assets/left.png",
+      right: "assets/right.png"
     };
-    sheet.addEventListener('animationend', done);
-  }
 
-  function next(){
-    if (isMobile()){
-      if (mobileIndex >= 2) return;
-      const from = ASSETS[mobileIndex];
-      const to = ASSETS[mobileIndex + 1];
+    const book = document.getElementById("book");
+    const spread = document.getElementById("spread");
+    const single = document.getElementById("single");
 
-      // flip page from current to next
-      doFlip(from, to, ()=>{
-        mobileIndex++;
-        showMobile();
-      });
+    const leftImg = document.getElementById("leftImg");
+    const rightImg = document.getElementById("rightImg");
+    const singleImg = document.getElementById("singleImg");
 
-    } else {
-      if (desktopState >= 1) return;
+    const flipLayer = document.getElementById("flipLayer");
+    const sheet = document.getElementById("sheet");
+    const paper = document.getElementById("paper");
+    const paperFront = document.getElementById("paperFront");
+    const paperBack  = document.getElementById("paperBack");
+    const gloss = document.getElementById("gloss");
+    const spineShadow = document.getElementById("spineShadow");
 
-      // Desktop: cover -> spread, flip like book page
-      // We flip from cover to left (as “inside reveal”) then show spread
-      doFlip(ASSETS[0], ASSETS[1], ()=>{
-        desktopState = 1;
-        showDesktop();
-      });
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const sound = document.getElementById("flipSound");
+
+    let isMobile = window.matchMedia("(max-width: 900px)").matches;
+    let isAnimating = false;
+
+    // Steps:
+    // Desktop: [0]=cover single, [1]=spread(left+right)
+    // Mobile : [0]=cover, [1]=left, [2]=right
+    let step = 0;
+
+    function stepsCount(){
+      return isMobile ? 3 : 2;
     }
-  }
 
-  function prev(){
-    if (isMobile()){
-      if (mobileIndex <= 0) return;
-      const from = ASSETS[mobileIndex];
-      const to = ASSETS[mobileIndex - 1];
-
-      // flip back (still looks like a page turn)
-      doFlip(from, to, ()=>{
-        mobileIndex--;
-        showMobile();
-      });
-
-    } else {
-      if (desktopState <= 0) return;
-
-      // Desktop: spread -> cover, flip from left to cover
-      doFlip(ASSETS[1], ASSETS[0], ()=>{
-        desktopState = 0;
-        showDesktop();
-      });
+    function clampStep(){
+      const max = stepsCount() - 1;
+      step = Math.max(0, Math.min(step, max));
     }
-  }
 
-  window.addEventListener('resize', ()=>{
-    // keep sensible state when switching modes
-    if (isMobile()){
-      // if you were on desktop spread, start at left page on mobile
-      mobileIndex = (desktopState === 0) ? 0 : 1;
-    } else {
-      // if you were past cover on mobile, go to spread on desktop
-      desktopState = (mobileIndex === 0) ? 0 : 1;
+    function updateButtons(){
+      prevBtn.disabled = (step === 0 || isAnimating);
+      nextBtn.disabled = (step === stepsCount() - 1 || isAnimating);
     }
-    layout();
-  });
 
-  layout();
-</script>
+    function setViewInstant(){
+      if(isMobile){
+        // show single
+        if(step === 0) singleImg.src = ASSETS.cover;
+        if(step === 1) singleImg.src = ASSETS.left;
+        if(step === 2) singleImg.src = ASSETS.right;
+      } else {
+        // desktop: cover or spread
+        if(step === 0){
+          // show cover centered in "single" slot using leftImg as one big (we fake it)
+          leftImg.src = ASSETS.cover;
+          rightImg.src = ""; // empty
+          rightImg.style.opacity = "0";
+          leftImg.style.gridColumn = "1 / span 2";
+          leftImg.style.width = "min(520px, 90%)";
+          leftImg.style.height = "100%";
+          leftImg.style.justifySelf = "center";
+        } else {
+          rightImg.style.opacity = "1";
+          leftImg.style.gridColumn = "";
+          leftImg.style.width = "";
+          leftImg.style.height = "";
+          leftImg.style.justifySelf = "";
+
+          leftImg.src  = ASSETS.left;
+          rightImg.src = ASSETS.right;
+        }
+      }
+      updateButtons();
+    }
+
+    function safePlay(){
+      try{
+        sound.currentTime = 0;
+        sound.playbackRate = 1.15; // πιο φυσικό
+        sound.play().catch(()=>{});
+      }catch(e){}
+    }
+
+    // Configure flip overlay geometry
+    function setupFlipGeometry(){
+      // show overlay only during animation
+      flipLayer.style.display = "none";
+
+      if(isMobile){
+        // paper takes full single area (we flip the whole page)
+        paper.style.left = "0";
+        paper.style.width = "100%";
+        paper.style.transformOrigin = "left center";
+        spineShadow.style.opacity = "0";
+      }else{
+        // we flip the RIGHT half on spread transitions
+        paper.style.left = "50%";
+        paper.style.width = "50%";
+        paper.style.transformOrigin = "left center";
+      }
+    }
+
+    function showFlip(frontImg, backImg, direction){
+      // direction: "next" or "prev"
+      // set paper images
+      paperFront.style.backgroundImage = `url("${frontImg}")`;
+      paperBack.style.backgroundImage  = `url("${backImg}")`;
+
+      // For desktop, we flip a half-panel:
+      // front/back should be sized like half spread, but our images are full pages,
+      // and object-fit via background-size:contain will still look perfect.
+      // For mobile, full page flip looks right.
+
+      // Reset classes
+      sheet.classList.remove("turning","reverse");
+      void sheet.offsetWidth; // reflow
+
+      flipLayer.style.display = "block";
+      sheet.classList.add("turning");
+      if(direction === "prev") sheet.classList.add("reverse");
+      safePlay();
+    }
+
+    function hideFlip(){
+      flipLayer.style.display = "none";
+      sheet.classList.remove("turning","reverse");
+    }
+
+    function animateTo(newStep){
+      if(isAnimating) return;
+      const oldStep = step;
+      if(newStep === oldStep) return;
+
+      isAnimating = true;
+      updateButtons();
+
+      const dir = newStep > oldStep ? "next" : "prev";
+
+      // Decide front/back images for the flipping "paper"
+      let frontImg, backImg;
+
+      if(isMobile){
+        // flip whole page: old -> new
+        frontImg = (oldStep===0?ASSETS.cover : oldStep===1?ASSETS.left : ASSETS.right);
+        backImg  = (newStep===0?ASSETS.cover : newStep===1?ASSETS.left : ASSETS.right);
+      } else {
+        // desktop:
+        // cover -> spread : flip cover away, show spread behind
+        // spread -> cover : flip right page back to cover (we fake with cover)
+        if(oldStep===0 && newStep===1){
+          frontImg = ASSETS.cover;
+          backImg  = ASSETS.right; // visually nice: right page appears as it turns
+        } else if(oldStep===1 && newStep===0){
+          frontImg = ASSETS.right;
+          backImg  = ASSETS.cover;
+        } else {
+          frontImg = ASSETS.right;
+          backImg  = ASSETS.right;
+        }
+      }
+
+      // Start flip overlay
+      showFlip(frontImg, backImg, dir);
+
+      // During animation, swap the actual view slightly after start for realism
+      const swapAt = Math.round( (parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--turnDur")) || 0.90) * 550 );
+      setTimeout(()=>{
+        step = newStep;
+        setViewInstant();
+      }, swapAt);
+
+      // End
+      const endAt = Math.round( (parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--turnDur")) || 0.90) * 1000 ) + 40;
+      setTimeout(()=>{
+        hideFlip();
+        isAnimating = false;
+        updateButtons();
+      }, endAt);
+    }
+
+    // Buttons
+    prevBtn.addEventListener("click", ()=> animateTo(step - 1));
+    nextBtn.addEventListener("click", ()=> animateTo(step + 1));
+
+    // Swipe (mobile + desktop)
+    let startX = null;
+    book.addEventListener("touchstart", (e)=>{
+      if(e.touches && e.touches.length===1) startX = e.touches[0].clientX;
+    }, {passive:true});
+
+    book.addEventListener("touchend", (e)=>{
+      if(startX === null) return;
+      const endX = (e.changedTouches && e.changedTouches[0]) ? e.changedTouches[0].clientX : startX;
+      const dx = endX - startX;
+      startX = null;
+      if(Math.abs(dx) < 45) return;
+      if(dx < 0) animateTo(step + 1);
+      else animateTo(step - 1);
+    }, {passive:true});
+
+    // Resize handling
+    function handleResize(){
+      const nowMobile = window.matchMedia("(max-width: 900px)").matches;
+      if(nowMobile !== isMobile){
+        // map step between modes
+        // Desktop steps: 0 cover, 1 spread
+        // Mobile steps: 0 cover, 1 left, 2 right
+        if(nowMobile){
+          // desktop->mobile
+          // if we were on spread, go to left (step 1) by default
+          step = (step===1) ? 1 : 0;
+        }else{
+          // mobile->desktop
+          // if we were on right, treat as spread
+          step = (step>=1) ? 1 : 0;
+        }
+        isMobile = nowMobile;
+        setupFlipGeometry();
+        setViewInstant();
+      }
+    }
+
+    window.addEventListener("resize", handleResize);
+
+    // Init
+    setupFlipGeometry();
+    clampStep();
+    setViewInstant();
+  </script>
 </body>
 </html>
