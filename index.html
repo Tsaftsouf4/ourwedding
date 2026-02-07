@@ -9,11 +9,11 @@
       --bg:#f6ead9;
       --ink:#4a4038;
       --gap: 14px;
-      --pageAspect: 1.45;
+      --pageAspect: 1.45;             /* height = width * aspect */
       --bookW: min(96vw, 980px);      /* desktop spread width */
-      --pageW: min(92vw, 420px);      /* mobile single width (FIT, not zoomed) */
     }
     *{box-sizing:border-box}
+    html, body{ height:100%; }
     body{
       margin:0;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
@@ -93,13 +93,19 @@
     .coverSide img{ width:100%; height:100%; display:block; object-fit:contain; background:transparent; }
     .coverBack{ transform: rotateY(180deg); }
 
-    /* ===== Mobile single (CENTER + FIT) ===== */
+    /* ===== Mobile single (AUTO-FIT) ===== */
     .mobileStage{
-      width: var(--pageW);
-      height: calc(var(--pageW) * var(--pageAspect));
+      /* fit by both width and height so it never overflows */
+      width: min(92vw, calc((100svh - 190px) / var(--pageAspect)));
+      max-width: 460px;
+
+      height: calc(min(92vw, calc((100svh - 190px) / var(--pageAspect))) * var(--pageAspect));
+      max-height: calc(460px * var(--pageAspect));
+
       perspective: 2200px;
       position: relative;
       margin: 0 auto;
+      touch-action: manipulation;
     }
     .mobileBook{ position:absolute; inset:0; transform-style: preserve-3d; }
 
@@ -139,16 +145,22 @@
     .mobileOnly{ display:none; }
 
     @media (max-width: 520px){
-      .wrap{ justify-content:flex-start; gap:14px; }
+      .wrap{
+        justify-content:flex-start;
+        gap:14px;
+      }
       .desktopOnly{ display:none; }
       .mobileOnly{ display:block; }
-      /* Keep content centered and not overflowing */
-      .mobileStage{ margin-top: 6px; }
+
+      /* make sure the stage + sticky buttons fit nicely */
+      .mobileStage{
+        margin-top: 6px;
+      }
       .controls{
         position: sticky;
-        bottom: 10px;
+        bottom: calc(10px + env(safe-area-inset-bottom));
         z-index: 60;
-        padding-bottom: 6px;
+        padding: 10px 0 6px;
       }
     }
   </style>
