@@ -7,30 +7,38 @@
   <style>
     :root{
       --bg:#f6ead9;
+      --ink:#4a4038;
+      --muted:#7a6d63;
+
       --bookW: min(96vw, 980px);
       --pageAspect: 1.45;
       --gap: 14px;
       --radius: 22px;
     }
     *{box-sizing:border-box}
-    html,body{height:100%}
     body{
       margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
       background: radial-gradient(900px 560px at 50% -140px, #fff 0%, var(--bg) 60%, #f2dfcb 100%);
       overflow:hidden;
       -webkit-tap-highlight-color: transparent;
-      user-select:none;
     }
 
-    /* Center only the book – no UI */
+    .wrap{
+      min-height:100svh;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:12px;
+      padding: 14px 10px 18px;
+    }
+
     .stage{
       width: var(--bookW);
       height: calc((var(--bookW) / 2) * var(--pageAspect));
       perspective: 2600px;
-      position: absolute;
-      left: 50%;
-      top: 50%;
-      transform: translate(-50%, -50%);
+      position: relative;
     }
     .book{ position:absolute; inset:0; transform-style: preserve-3d; }
 
@@ -49,13 +57,14 @@
     }
     .book.open .spread{ opacity: 1; pointer-events:auto; }
 
+    /* IMPORTANT: no extra card/shadow — PNG already has it */
     .page{
       width:100%;
       height:100%;
-      border-radius: var(--radius);
-      overflow:hidden;
+      border-radius: 0;
+      overflow: visible;
       background: transparent;
-      box-shadow: 0 18px 55px rgba(0,0,0,.18);
+      box-shadow: none;
     }
     .page img{
       width:100%;
@@ -65,14 +74,15 @@
       background: transparent;
     }
 
+    /* optional thin spine (very subtle) */
     .spine{
       position:absolute;
-      top: 8px;
-      bottom: 8px;
+      top: 10px;
+      bottom: 10px;
       left: 50%;
-      width: 3px;
+      width: 2px;
       transform: translateX(-50%);
-      background: rgba(0,0,0,.06);
+      background: rgba(0,0,0,.04);
       border-radius: 999px;
       pointer-events:none;
       z-index: 5;
@@ -85,7 +95,7 @@
       width: calc(var(--bookW) / 2);
       transform-style: preserve-3d;
       transform-origin: left center;
-      transition: transform 1050ms cubic-bezier(.16,.92,.18,1);
+      transition: transform 980ms cubic-bezier(.16,.92,.18,1);
       z-index: 20;
     }
     .book.open .coverWrap{ transform: rotateY(-180deg); }
@@ -94,9 +104,9 @@
       position:absolute;
       inset:0;
       backface-visibility: hidden;
-      border-radius: var(--radius);
-      overflow:hidden;
-      box-shadow: 0 18px 55px rgba(0,0,0,.18);
+      border-radius: 0;
+      overflow: visible;
+      box-shadow: none;       /* PNG already has it */
       background: transparent;
     }
     .coverSide img{
@@ -108,74 +118,91 @@
     }
     .coverBack{ transform: rotateY(180deg); }
 
+    /* very light page-edge shading only (no big blocks) */
     .coverSide::after{
       content:"";
       position:absolute;
-      inset:-1px;
-      border-radius: var(--radius);
+      inset:0;
       pointer-events:none;
       background: linear-gradient(90deg,
-        rgba(0,0,0,.22) 0%,
-        rgba(0,0,0,.06) 14%,
-        rgba(0,0,0,0) 42%,
-        rgba(255,255,255,.10) 78%,
-        rgba(255,255,255,.18) 100%);
-      opacity:.18;
+        rgba(0,0,0,.10) 0%,
+        rgba(0,0,0,.03) 10%,
+        rgba(0,0,0,0) 40%,
+        rgba(255,255,255,.08) 80%,
+        rgba(255,255,255,.12) 100%);
+      opacity:.10;
       mix-blend-mode:multiply;
     }
 
-    /* Invisible tap zones */
-    .tapzone{
-      position:absolute; top:0; bottom:0; width:50%;
-      z-index: 30;
+    .controls{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:center;
+      flex-wrap:wrap;
     }
-    .tapzone.right{right:0}
-    .tapzone.left{left:0}
+    button{
+      appearance:none;
+      border:1px solid rgba(0,0,0,.12);
+      background: rgba(255,255,255,.40);
+      color: var(--ink);
+      border-radius: 999px;
+      padding: 10px 14px;
+      font-weight:650;
+      cursor:pointer;
+      backdrop-filter: blur(10px);
+    }
+    button:active{transform: translateY(1px)}
+    button:disabled{opacity:.45; cursor:not-allowed}
 
     @media (max-width: 520px){
       :root{ --bookW: min(96vw, 520px); --gap: 10px; }
       .spread{ padding: 0 2px; }
-      .spine{ width: 2px; }
+      .spine{ width: 1px; }
     }
   </style>
 </head>
 <body>
-  <div class="stage" aria-label="Flipbook">
-    <div class="book" id="book">
-      <div class="spread" aria-label="Διπλή σελίδα">
-        <div class="page" aria-label="Ο γάμος μας">
-          <img src="assets/left.png" alt="Ο γάμος μας" />
+  <div class="wrap">
+    <div class="stage" aria-label="Flipbook">
+      <div class="book" id="book">
+        <div class="spread" aria-label="Διπλή σελίδα">
+          <div class="page" aria-label="Ο γάμος μας">
+            <img src="assets/left.png" alt="Ο γάμος μας" />
+          </div>
+          <div class="page" aria-label="Η ημέρα μας">
+            <img src="assets/right.png" alt="Η ημέρα μας" />
+          </div>
+          <div class="spine" aria-hidden="true"></div>
         </div>
-        <div class="page" aria-label="Η ημέρα μας">
-          <img src="assets/right.png" alt="Η ημέρα μας" />
-        </div>
-        <div class="spine" aria-hidden="true"></div>
-      </div>
 
-      <div class="coverWrap" aria-label="Save the date">
-        <div class="coverSide coverFront">
-          <img src="assets/cover.png" alt="Save the date" />
-        </div>
-        <div class="coverSide coverBack">
-          <img src="assets/left.png" alt="Ο γάμος μας" />
+        <div class="coverWrap" aria-label="Save the date">
+          <div class="coverSide coverFront">
+            <img src="assets/cover.png" alt="Save the date" />
+          </div>
+          <div class="coverSide coverBack">
+            <img src="assets/left.png" alt="Ο γάμος μας" />
+          </div>
         </div>
       </div>
-
-      <div class="tapzone left" id="prevTap" aria-hidden="true"></div>
-      <div class="tapzone right" id="nextTap" aria-hidden="true"></div>
     </div>
-  </div>
 
-  <audio id="flipSound" preload="auto">
-    <source src="assets/flip.mp3" type="audio/mpeg">
-    <source src="assets/flip.wav" type="audio/wav">
-  </audio>
+    <div class="controls">
+      <button id="prevBtn" disabled>◀ Πίσω</button>
+      <button id="nextBtn">Μπροστά ▶</button>
+    </div>
+
+    <audio id="flipSound" preload="auto">
+      <source src="assets/flip.mp3" type="audio/mpeg">
+      <source src="assets/flip.wav" type="audio/wav">
+    </audio>
+  </div>
 
   <script>
     (function(){
       const book = document.getElementById('book');
-      const prevTap = document.getElementById('prevTap');
-      const nextTap = document.getElementById('nextTap');
+      const prevBtn = document.getElementById('prevBtn');
+      const nextBtn = document.getElementById('nextBtn');
       const flipSound = document.getElementById('flipSound');
 
       let open = false;
@@ -184,45 +211,48 @@
       function unlockAudio(){
         if(audioUnlocked) return;
         audioUnlocked = true;
-        // Try to "unlock" audio on first user gesture (iOS/Safari friendly)
         try{
           flipSound.volume = 0;
+          flipSound.playbackRate = 1.35; // ΠΙΟ ΓΡΗΓΟΡΑ
           const p = flipSound.play();
           if(p && p.then){
-            p.then(()=>{ flipSound.pause(); flipSound.currentTime = 0; flipSound.volume = 0.28; })
-             .catch(()=>{ flipSound.volume = 0.28; });
+            p.then(()=>{ flipSound.pause(); flipSound.currentTime = 0; flipSound.volume = 0.30; })
+             .catch(()=>{ flipSound.volume = 0.30; });
           }else{
-            flipSound.pause(); flipSound.currentTime = 0; flipSound.volume = 0.28;
+            flipSound.pause(); flipSound.currentTime = 0; flipSound.volume = 0.30;
           }
         }catch(e){
-          flipSound.volume = 0.28;
+          flipSound.volume = 0.30;
         }
       }
 
       function playFlip(){
         try{
           flipSound.currentTime = 0;
-          flipSound.volume = 0.28; // premium χαμηλά
+          flipSound.playbackRate = 1.35;  // ΠΙΟ ΓΡΗΓΟΡΑ
+          flipSound.volume = 0.30;
           flipSound.play();
         }catch(e){}
       }
 
       function setState(isOpen){
+        // play sound IMMEDIATELY on click
+        playFlip();
         open = isOpen;
         book.classList.toggle('open', open);
-        playFlip();
+        prevBtn.disabled = !open;
+        nextBtn.disabled = open;
       }
 
-      function openBook(){ if(!open){ setState(true); } }
-      function closeBook(){ if(open){ setState(false); } }
+      function openBook(){ if(!open) setState(true); }
+      function closeBook(){ if(open) setState(false); }
 
-      // Unlock audio on ANY first interaction
       window.addEventListener('pointerdown', unlockAudio, { once: true });
 
-      nextTap.addEventListener('click', openBook);
-      prevTap.addEventListener('click', closeBook);
+      nextBtn.addEventListener('click', openBook);
+      prevBtn.addEventListener('click', closeBook);
 
-      // Also allow click anywhere on stage: right=open, left=close
+      // click on stage: right=open, left=close
       document.querySelector('.stage').addEventListener('click', (e)=>{
         const rect = e.currentTarget.getBoundingClientRect();
         const x = e.clientX - rect.left;
