@@ -6,117 +6,113 @@
 <title>Πρόσκληση Γάμου</title>
 
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
-html, body{
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  background: #f6ead8;
-  font-family: serif;
-}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;height:100%;overflow:hidden;background:#f6ead8;font-family:serif}
 
 :root{
-  --pageAspect: 1.45; /* height / width */
+  --pageAspect: 1.45;     /* height / width */
   --pageShadow: 0 18px 40px rgba(0,0,0,.25);
+  --radius: 22px;
 }
 
 .wrapper{
-  width: 100vw;
-  height: 100svh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  position: relative;
+  width:100vw;height:100svh;
+  display:flex;align-items:center;justify-content:center;
+  position:relative;
 }
 
+/* BOOK AREA */
 .book{
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 28px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:28px;
+  will-change: transform;
 }
 
+/* PAGE */
 .page{
-  background: transparent;
+  background:transparent;
   box-shadow: var(--pageShadow);
-  border-radius: 22px 22px 18px 18px;
-  overflow: hidden;
+  border-radius: var(--radius);
+  overflow:hidden;
+  transform-style: preserve-3d;
 }
 
 .page img{
-  width: 100%;
-  height: 100%;
+  width:100%;height:100%;
   object-fit: contain;
-  display: block;
+  display:block;
 }
 
+/* NAV */
 .nav{
-  position: absolute;
-  bottom: 26px;
-  display: flex;
-  gap: 14px;
-  z-index: 10;
+  position:absolute;
+  bottom:26px;
+  display:flex;
+  gap:14px;
+  z-index:10;
 }
-
 button{
   background: rgba(255,255,255,.65);
-  border: none;
-  padding: 10px 18px;
-  border-radius: 999px;
-  font-size: 14px;
-  cursor: pointer;
+  border:none;
+  padding:10px 18px;
+  border-radius:999px;
+  font-size:14px;
+  cursor:pointer;
   backdrop-filter: blur(6px);
 }
 
-/* MOBILE: μία σελίδα, κεντρικά, μεγάλη αλλά ΠΟΤΕ κομμένη */
-@media (max-width: 900px){
-  .book{ flex-direction: column; }
+/* ===== FLIP ANIMATION ===== */
+@keyframes pageFlip {
+  0%   { transform: perspective(1200px) rotateY(0deg) translateZ(0); }
+  40%  { transform: perspective(1200px) rotateY(-18deg) translateZ(1px); }
+  100% { transform: perspective(1200px) rotateY(0deg) translateZ(0); }
+}
+.flip-anim .page{
+  animation: pageFlip .38s cubic-bezier(.2,.8,.2,1);
+}
 
+/* MOBILE: μία σελίδα, κεντρικά, μεγάλη αλλά ποτέ κομμένη */
+@media (max-width: 900px){
+  .book{ flex-direction: column; gap: 0; }
   .page{
     width: min(92vw, calc((100svh - 200px) / var(--pageAspect)));
     height: calc(
       min(92vw, calc((100svh - 200px) / var(--pageAspect))) * var(--pageAspect)
     );
   }
-
-  .page.hide-mobile{ display: none; }
+  .hide-mobile{ display:none !important; }
 }
 
-/* DESKTOP: διπλή σελίδα */
+/* DESKTOP: όπως πριν -> cover μόνο, μετά διπλή σελίδα */
 @media (min-width: 901px){
   .page{
     width: min(38vw, 420px);
     height: calc(min(38vw, 420px) * var(--pageAspect));
   }
+  .hide-desktop{ display:none !important; }
 }
 </style>
 </head>
 
 <body>
-
 <div class="wrapper">
 
   <div class="book" id="book">
-    <!-- 1️⃣ Cover -->
-    <div class="page">
-      <img src="assets/cover.png" alt="Cover">
-    </div>
+    <!-- 1 Cover -->
+    <div class="page" id="p0"><img src="assets/cover.png" alt="Cover"></div>
 
-    <!-- 2️⃣ Left -->
-    <div class="page hide-mobile">
-      <img src="assets/left.png" alt="Ο γάμος μας">
-    </div>
+    <!-- 2 Left -->
+    <div class="page" id="p1"><img src="assets/left.png" alt="Ο γάμος μας"></div>
 
-    <!-- 3️⃣ Right -->
-    <div class="page hide-mobile">
-      <img src="assets/right.png" alt="Η ημέρα μας">
-    </div>
+    <!-- 3 Right -->
+    <div class="page" id="p2"><img src="assets/right.png" alt="Η ημέρα μας"></div>
   </div>
 
   <div class="nav">
-    <button onclick="prev()">◀ Πίσω</button>
-    <button onclick="next()">Μπροστά ▶</button>
+    <button id="btnPrev" onclick="prev()">◀ Πίσω</button>
+    <button id="btnNext" onclick="next()">Μπροστά ▶</button>
   </div>
 
 </div>
@@ -124,43 +120,95 @@ button{
 <audio id="flipSound" src="assets/flip.mp3" preload="auto"></audio>
 
 <script>
-const pages = document.querySelectorAll('.page');
+const book  = document.getElementById('book');
+const pages = [document.getElementById('p0'), document.getElementById('p1'), document.getElementById('p2')];
 const sound = document.getElementById('flipSound');
-let index = 0;
 
-function update(){
-  if (window.innerWidth <= 900){
-    pages.forEach((p,i)=> p.classList.toggle('hide-mobile', i !== index));
-  } else {
-    pages.forEach(p => p.classList.remove('hide-mobile'));
-  }
-}
+let indexMobile = 0;  // 0->1->2
+let indexDesktop = 0; // 0 = cover μόνο, 1 = διπλή σελίδα (left+right)
 
-function playSound(){
+function isMobile(){ return window.innerWidth <= 900; }
+
+function playFlip(){
+  // πιο γρήγορο/σφιχτό flip sound
   sound.currentTime = 0;
   sound.playbackRate = 1.35;
   sound.play().catch(()=>{});
 }
 
+function animateFlip(){
+  book.classList.remove('flip-anim');
+  // force reflow
+  void book.offsetWidth;
+  book.classList.add('flip-anim');
+  setTimeout(()=>book.classList.remove('flip-anim'), 420);
+}
+
+function setVisibility(){
+  // reset
+  pages.forEach(p=>{
+    p.classList.remove('hide-mobile','hide-desktop');
+  });
+
+  if (isMobile()){
+    // mobile: δείξε μόνο 1 σελίδα (indexMobile)
+    pages.forEach((p,i)=>{
+      if (i !== indexMobile) p.classList.add('hide-mobile');
+    });
+  } else {
+    // desktop: όπως πριν
+    // indexDesktop=0 -> cover μόνο
+    // indexDesktop=1 -> left+right (διπλή)
+    if (indexDesktop === 0){
+      pages[1].classList.add('hide-desktop');
+      pages[2].classList.add('hide-desktop');
+    } else {
+      pages[0].classList.add('hide-desktop');
+      // left+right visible
+    }
+  }
+}
+
 function next(){
-  if(index < pages.length - 1){
-    index++;
-    playSound();
-    update();
+  if (isMobile()){
+    if (indexMobile < 2){
+      indexMobile++;
+      playFlip(); animateFlip(); setVisibility();
+    }
+  } else {
+    if (indexDesktop < 1){
+      indexDesktop = 1;
+      playFlip(); animateFlip(); setVisibility();
+    }
   }
 }
 
 function prev(){
-  if(index > 0){
-    index--;
-    playSound();
-    update();
+  if (isMobile()){
+    if (indexMobile > 0){
+      indexMobile--;
+      playFlip(); animateFlip(); setVisibility();
+    }
+  } else {
+    if (indexDesktop > 0){
+      indexDesktop = 0;
+      playFlip(); animateFlip(); setVisibility();
+    }
   }
 }
 
-window.addEventListener('resize', update);
-update();
-</script>
+window.addEventListener('resize', ()=>{
+  // όταν αλλάζει mode, κράτα λογική θέση:
+  // αν πας σε desktop -> αν είσαι σε left/right, πήγαινε στη διπλή
+  if (!isMobile()){
+    indexDesktop = (indexMobile === 0) ? 0 : 1;
+  } else {
+    indexMobile = (indexDesktop === 0) ? 0 : 1; // στη mobile ξεκίνα από left όταν είσαι σε spread
+  }
+  setVisibility();
+});
 
+setVisibility();
+</script>
 </body>
 </html>
