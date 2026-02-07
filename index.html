@@ -4,56 +4,33 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Πρόσκληση Γάμου</title>
-  <meta name="description" content="Ψηφιακή πρόσκληση γάμου" />
   <style>
     :root{
       --bg:#f6ead9;
-      --ink:#4a4038;
-      --muted:#7a6d63;
-
-      /* Compact (A) */
       --bookW: min(96vw, 980px);
       --pageAspect: 1.45;
       --gap: 14px;
       --radius: 22px;
     }
     *{box-sizing:border-box}
+    html,body{height:100%}
     body{
       margin:0;
-      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
-      /* ΔΕΝ αλλάζω χρώματα – κρατάμε ακριβώς το ίδιο vibe */
       background: radial-gradient(900px 560px at 50% -140px, #fff 0%, var(--bg) 60%, #f2dfcb 100%);
-      color: var(--ink);
-      -webkit-font-smoothing:antialiased;
-      text-rendering:optimizeLegibility;
-      overflow-x:hidden;
+      overflow:hidden;
+      -webkit-tap-highlight-color: transparent;
+      user-select:none;
     }
-    .wrap{
-      min-height:100svh;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      gap:14px;
-      padding: 18px 12px 26px;
-    }
-    .badge{
-      display:inline-flex; gap:10px; align-items:center;
-      padding:10px 14px;
-      background: rgba(255,255,255,.35);
-      border:1px solid rgba(0,0,0,.06);
-      border-radius:999px;
-      color:var(--muted);
-      font-size:14px;
-      backdrop-filter: blur(8px);
-    }
-    .badge .dot{width:8px;height:8px;border-radius:999px;background:var(--ink);opacity:.7}
 
+    /* Center only the book – no UI */
     .stage{
       width: var(--bookW);
       height: calc((var(--bookW) / 2) * var(--pageAspect));
       perspective: 2600px;
-      position: relative;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
     }
     .book{ position:absolute; inset:0; transform-style: preserve-3d; }
 
@@ -147,32 +124,10 @@
       mix-blend-mode:multiply;
     }
 
-    .controls{
-      display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap:wrap;
-    }
-    button{
-      appearance:none;
-      border:1px solid rgba(0,0,0,.12);
-      background: rgba(255,255,255,.40);
-      color: var(--ink);
-      border-radius: 999px;
-      padding: 10px 14px;
-      font-weight:650;
-      cursor:pointer;
-      backdrop-filter: blur(10px);
-    }
-    button:disabled{opacity:.45; cursor:not-allowed}
-
-    .hint{
-      font-size: 12.5px;
-      color: var(--muted);
-      text-align:center;
-      max-width: 760px;
-      line-height:1.35;
-    }
-
+    /* Invisible tap zones */
     .tapzone{
-      position:absolute; top:0; bottom:0; width: 50%; z-index: 30;
+      position:absolute; top:0; bottom:0; width:50%;
+      z-index: 30;
     }
     .tapzone.right{right:0}
     .tapzone.left{left:0}
@@ -185,93 +140,94 @@
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <div class="badge"><span class="dot"></span> Πρόσκληση Γάμου</div>
-
-    <div class="stage" aria-label="Flipbook (A compact spread)">
-      <div class="book" id="book">
-        <div class="spread" aria-label="Διπλή σελίδα">
-          <div class="page" aria-label="Ο γάμος μας">
-            <img src="assets/left.png" alt="Ο γάμος μας" />
-          </div>
-          <div class="page" aria-label="Η ημέρα μας">
-            <img src="assets/right.png" alt="Η ημέρα μας" />
-          </div>
-          <div class="spine" aria-hidden="true"></div>
+  <div class="stage" aria-label="Flipbook">
+    <div class="book" id="book">
+      <div class="spread" aria-label="Διπλή σελίδα">
+        <div class="page" aria-label="Ο γάμος μας">
+          <img src="assets/left.png" alt="Ο γάμος μας" />
         </div>
-
-        <div class="coverWrap" id="coverWrap" aria-label="Save the date">
-          <div class="coverSide coverFront">
-            <img src="assets/cover.png" alt="Save the date" />
-          </div>
-          <div class="coverSide coverBack">
-            <img src="assets/left.png" alt="Ο γάμος μας" />
-          </div>
+        <div class="page" aria-label="Η ημέρα μας">
+          <img src="assets/right.png" alt="Η ημέρα μας" />
         </div>
-
-        <div class="tapzone left" id="prevTap" aria-hidden="true"></div>
-        <div class="tapzone right" id="nextTap" aria-hidden="true"></div>
+        <div class="spine" aria-hidden="true"></div>
       </div>
-    </div>
 
-    <div class="controls">
-      <button id="prevBtn" disabled>◀ Κλείσιμο</button>
-      <button id="nextBtn">Άνοιγμα ▶</button>
-    </div>
+      <div class="coverWrap" aria-label="Save the date">
+        <div class="coverSide coverFront">
+          <img src="assets/cover.png" alt="Save the date" />
+        </div>
+        <div class="coverSide coverBack">
+          <img src="assets/left.png" alt="Ο γάμος μας" />
+        </div>
+      </div>
 
-    <div class="hint">
-      Αν θες <b>τον δικό σου ήχο</b>: ανέβασε ένα αρχείο <b>assets/flip.mp3</b> (ίδιο όνομα) και θα τον χρησιμοποιήσει αυτόματα.
+      <div class="tapzone left" id="prevTap" aria-hidden="true"></div>
+      <div class="tapzone right" id="nextTap" aria-hidden="true"></div>
     </div>
-
-    <audio id="flipSound" preload="auto">
-      <!-- ΒΑΛΕ εδώ το δικό σου flip.mp3 (premium). Αν δεν υπάρχει, παίζει το flip.wav -->
-      <source src="assets/flip.mp3" type="audio/mpeg">
-      <source src="assets/flip.wav" type="audio/wav">
-    </audio>
   </div>
+
+  <audio id="flipSound" preload="auto">
+    <source src="assets/flip.mp3" type="audio/mpeg">
+    <source src="assets/flip.wav" type="audio/wav">
+  </audio>
 
   <script>
     (function(){
       const book = document.getElementById('book');
-      const prevBtn = document.getElementById('prevBtn');
-      const nextBtn = document.getElementById('nextBtn');
       const prevTap = document.getElementById('prevTap');
       const nextTap = document.getElementById('nextTap');
       const flipSound = document.getElementById('flipSound');
 
       let open = false;
+      let audioUnlocked = false;
+
+      function unlockAudio(){
+        if(audioUnlocked) return;
+        audioUnlocked = true;
+        // Try to "unlock" audio on first user gesture (iOS/Safari friendly)
+        try{
+          flipSound.volume = 0;
+          const p = flipSound.play();
+          if(p && p.then){
+            p.then(()=>{ flipSound.pause(); flipSound.currentTime = 0; flipSound.volume = 0.28; })
+             .catch(()=>{ flipSound.volume = 0.28; });
+          }else{
+            flipSound.pause(); flipSound.currentTime = 0; flipSound.volume = 0.28;
+          }
+        }catch(e){
+          flipSound.volume = 0.28;
+        }
+      }
 
       function playFlip(){
         try{
           flipSound.currentTime = 0;
-          flipSound.volume = 0.28; // κράτα το premium χαμηλά
+          flipSound.volume = 0.28; // premium χαμηλά
           flipSound.play();
         }catch(e){}
       }
 
-      function setState(isOpen, withSound=true){
+      function setState(isOpen){
         open = isOpen;
         book.classList.toggle('open', open);
-        prevBtn.disabled = !open;
-        nextBtn.disabled = open;
-        if(withSound) playFlip();
+        playFlip();
       }
 
-      function openBook(){ if(!open) setState(true, true); }
-      function closeBook(){ if(open) setState(false, true); }
+      function openBook(){ if(!open){ setState(true); } }
+      function closeBook(){ if(open){ setState(false); } }
 
-      nextBtn.addEventListener('click', openBook);
-      prevBtn.addEventListener('click', closeBook);
+      // Unlock audio on ANY first interaction
+      window.addEventListener('pointerdown', unlockAudio, { once: true });
+
       nextTap.addEventListener('click', openBook);
       prevTap.addEventListener('click', closeBook);
 
+      // Also allow click anywhere on stage: right=open, left=close
       document.querySelector('.stage').addEventListener('click', (e)=>{
         const rect = e.currentTarget.getBoundingClientRect();
         const x = e.clientX - rect.left;
         if(x > rect.width/2) openBook(); else closeBook();
       });
-
-      setState(false, false);
     })();
   </script>
 </body>
