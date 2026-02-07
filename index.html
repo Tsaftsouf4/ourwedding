@@ -15,9 +15,9 @@
     --radius: 22px;
     --bg: #f6ead8;
 
-    /* smoother + more “magazine” */
-    --turnDur: .92s;
-    --turnEase: cubic-bezier(.12,.92,.12,1);
+    /* One smooth motion */
+    --turnDur: .78s;
+    --turnEase: cubic-bezier(.14,.92,.16,1);
   }
 
   .wrap{
@@ -29,7 +29,7 @@
 
   .stage{
     position:relative;
-    perspective: 1400px;
+    perspective: 1200px;            /* just enough for “magazine” */
     perspective-origin: 50% 50%;
     display:flex;
     align-items:center;
@@ -73,7 +73,7 @@
   }
   button:disabled{ opacity:.45; cursor:not-allowed; }
 
-  /* ===== UNDER PAGE (next page visible behind turn) ===== */
+  /* ===== UNDER PAGE ===== */
   .underPage{
     position:absolute;
     top:0;left:0;
@@ -85,8 +85,6 @@
     z-index:10;
     pointer-events:none;
     background:transparent;
-
-    /* nicer reveal */
     opacity:0;
     transform-origin:center;
   }
@@ -99,14 +97,13 @@
     object-fit:contain;
     display:block;
   }
-
   @keyframes underIn{
-    0%   { opacity:0; transform: translateZ(0) scale(.996); }
-    35%  { opacity:.35; }
-    100% { opacity:1; transform: translateZ(0) scale(1); }
+    0%   { opacity:0; transform: scale(.998); }
+    45%  { opacity:.35; }
+    100% { opacity:1; transform: scale(1); }
   }
 
-  /* ===== FLIP LAYER (MAGAZINE CURL) ===== */
+  /* ===== FLIP LAYER ===== */
   .flipLayer{
     position:absolute;
     top:0;left:0;
@@ -123,7 +120,7 @@
     width:100%;height:100%;
     transform-style: preserve-3d;
     transform-origin: left center;
-    will-change: transform, filter, clip-path;
+    will-change: transform, filter, opacity;
   }
 
   .face{
@@ -142,9 +139,10 @@
     display:block;
   }
 
-  /* We animate only the current page (front) */
+  /* We animate ONLY the current page (front) for glitch-free */
   .back{ display:none; }
 
+  /* ===== “Magazine bend” overlays (no clip-path = no iOS stutter) ===== */
   .specular{
     position:absolute; inset:-2px;
     border-radius: var(--radius);
@@ -152,12 +150,13 @@
     opacity:0;
     background: linear-gradient(90deg,
       rgba(255,255,255,0) 0%,
-      rgba(255,255,255,.06) 30%,
-      rgba(255,255,255,.22) 48%,
-      rgba(255,255,255,.06) 63%,
+      rgba(255,255,255,.06) 28%,
+      rgba(255,255,255,.26) 50%,
+      rgba(255,255,255,.06) 68%,
       rgba(255,255,255,0) 100%
     );
     mix-blend-mode: screen;
+    filter: blur(.35px);
   }
 
   .curlShadow{
@@ -165,146 +164,101 @@
     border-radius: var(--radius);
     pointer-events:none;
     opacity:0;
-    background: radial-gradient(120% 90% at 18% 50%,
-      rgba(0,0,0,.22) 0%,
-      rgba(0,0,0,.10) 30%,
+    background: radial-gradient(120% 90% at 16% 50%,
+      rgba(0,0,0,.20) 0%,
+      rgba(0,0,0,.10) 28%,
       rgba(0,0,0,0) 62%
     );
-    filter: blur(1.2px);
     mix-blend-mode: multiply;
+    filter: blur(1.1px);
   }
 
-  .bendShade{
+  /* This makes the “curved / rolled edge” illusion */
+  .curlRoll{
     position:absolute; inset:0;
     border-radius: var(--radius);
     pointer-events:none;
     opacity:0;
-    background: linear-gradient(90deg,
-      rgba(0,0,0,.00) 0%,
-      rgba(0,0,0,.10) 18%,
-      rgba(0,0,0,.18) 38%,
-      rgba(0,0,0,.10) 58%,
-      rgba(0,0,0,.00) 78%
-    );
-    mix-blend-mode: multiply;
-    filter: blur(1.2px);
-  }
-
-  .bendRim{
-    position:absolute; inset:0;
-    border-radius: var(--radius);
-    pointer-events:none;
-    opacity:0;
-    background: linear-gradient(90deg,
-      rgba(255,255,255,0) 0%,
-      rgba(255,255,255,.10) 55%,
-      rgba(255,255,255,.30) 72%,
-      rgba(255,255,255,.08) 86%,
-      rgba(255,255,255,0) 100%
-    );
+    /* moving bright rim + soft falloff */
+    background:
+      radial-gradient(85% 120% at 86% 50%,
+        rgba(255,255,255,.32) 0%,
+        rgba(255,255,255,.12) 22%,
+        rgba(255,255,255,0) 55%
+      ),
+      radial-gradient(110% 130% at 92% 50%,
+        rgba(0,0,0,.22) 0%,
+        rgba(0,0,0,.10) 26%,
+        rgba(0,0,0,0) 58%
+      );
     mix-blend-mode: screen;
-    filter: blur(.6px);
+    filter: blur(.4px);
+    transform: translateX(-18px); /* starts more “inside” */
   }
 
+  /* subtle edge */
   .edge{
     position:absolute;
     top:0; bottom:0; left:0;
     width:10px;
     opacity:0;
     background: linear-gradient(90deg,
-      rgba(255,255,255,.35),
+      rgba(255,255,255,.30),
       rgba(255,255,255,.08),
       rgba(255,255,255,0)
     );
     pointer-events:none;
   }
 
-  /* ===== KEYFRAMES: softer “magazine” turn (less door / cardboard) ===== */
-  @keyframes magazineTurn {
+  /* ===== ONE smooth animation (0 -> 100 only) ===== */
+  @keyframes magazineTurnSmooth {
     0%{
-      transform: rotateY(0deg) translateX(0) skewY(0deg) rotateZ(0deg) scaleX(1) scaleY(1);
-      clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
-      filter: brightness(1) saturate(1);
+      transform: rotateY(0deg) translateX(0) skewY(0deg) rotateZ(0deg) scaleX(1);
+      opacity: 1;
+      filter: blur(0px);
     }
-
-    18%{
-      transform: rotateY(-18deg) translateX(4px) skewY(-1.2deg) rotateZ(-.35deg) scaleX(.995) scaleY(.998);
-      clip-path: polygon(0 0, 95% 0, 100% 16%, 100% 84%, 95% 100%, 0 100%);
-      filter: brightness(.997) saturate(1);
-    }
-
-    42%{
-      transform: rotateY(-42deg) translateX(14px) skewY(-3.0deg) rotateZ(-.85deg) scaleX(.972) scaleY(.995);
-      clip-path: polygon(0 0, 80% 0, 100% 26%, 100% 74%, 80% 100%, 0 100%);
-      filter: brightness(.992) saturate(.995);
-    }
-
-    /* small “floppy wave” */
-    62%{
-      transform: rotateY(-58deg) translateX(22px) skewY(-4.2deg) rotateZ(-1.05deg) scaleX(.952) scaleY(.992);
-      clip-path: polygon(0 0, 72% 0, 100% 34%, 100% 66%, 72% 100%, 0 100%);
-      filter: brightness(.989) saturate(.992);
-    }
-
-    78%{
-      transform: rotateY(-64deg) translateX(26px) skewY(-3.6deg) rotateZ(-.95deg) scaleX(.945) scaleY(.99);
-      clip-path: polygon(0 0, 70% 0, 100% 36%, 100% 64%, 70% 100%, 0 100%);
-      filter: brightness(.988) saturate(.99);
-    }
-
     100%{
-      transform: rotateY(-72deg) translateX(30px) skewY(-3.2deg) rotateZ(-.85deg) scaleX(.94) scaleY(.99);
-      clip-path: polygon(0 0, 66% 0, 100% 40%, 100% 60%, 66% 100%, 0 100%);
-      filter: brightness(.987) saturate(.99);
+      /* less “door/cardboard”, more “magazine” */
+      transform: rotateY(-66deg) translateX(28px) skewY(-3.2deg) rotateZ(-.85deg) scaleX(.94);
+      opacity: 0;
+      filter: blur(.35px);
     }
   }
 
-  /* richer moving gloss */
   @keyframes specularMove{
-    0%   { opacity:0; transform: translateX(-40%) skewX(-12deg); }
-    22%  { opacity:.12; }
-    52%  { opacity:.34; transform: translateX(6%) skewX(-10deg); }
-    78%  { opacity:.20; transform: translateX(28%) skewX(-8deg); }
-    100% { opacity:0; transform: translateX(44%) skewX(-6deg); }
+    0%   { opacity:0; transform: translateX(-38%) skewX(-12deg); }
+    35%  { opacity:.14; }
+    62%  { opacity:.32; transform: translateX(10%) skewX(-10deg); }
+    100% { opacity:0; transform: translateX(42%) skewX(-8deg); }
   }
 
-  @keyframes curlShadowMove{
-    0%   { opacity:0; transform: translateX(-6px); }
-    30%  { opacity:.10; }
-    55%  { opacity:.24; transform: translateX(8px); }
+  @keyframes shadowMove{
+    0%   { opacity:0; transform: translateX(-10px); }
+    40%  { opacity:.10; }
+    70%  { opacity:.22; transform: translateX(10px); }
     100% { opacity:0; transform: translateX(18px); }
   }
 
-  @keyframes bendShadeMove{
-    0%   { opacity:0; transform: translateX(-10px); }
-    25%  { opacity:.10; }
-    55%  { opacity:.22; transform: translateX(10px); }
-    100% { opacity:0; transform: translateX(22px); }
-  }
-
-  @keyframes bendRimMove{
-    0%   { opacity:0; transform: translateX(-18%); }
-    35%  { opacity:.16; }
-    65%  { opacity:.30; transform: translateX(18%); }
-    100% { opacity:0; transform: translateX(34%); }
+  @keyframes rollMove{
+    0%   { opacity:0; transform: translateX(-22px) scaleX(.96); }
+    30%  { opacity:.12; }
+    65%  { opacity:.24; transform: translateX(6px) scaleX(1); }
+    100% { opacity:0; transform: translateX(18px) scaleX(1.02); }
   }
 
   @keyframes edgeOn{
     0%{opacity:0}
     35%{opacity:.10}
-    60%{opacity:.16}
+    70%{opacity:.16}
     100%{opacity:0}
   }
 
   .turning{
-    animation: magazineTurn var(--turnDur) var(--turnEase) forwards;
-    /* tiny motion blur feel */
-    filter: blur(.25px);
+    animation: magazineTurnSmooth var(--turnDur) var(--turnEase) forwards;
   }
   .turning .specular{ animation: specularMove var(--turnDur) var(--turnEase) forwards; }
-  .turning .curlShadow{ animation: curlShadowMove var(--turnDur) var(--turnEase) forwards; }
-  .turning .bendShade{ animation: bendShadeMove var(--turnDur) var(--turnEase) forwards; }
-  .turning .bendRim{ animation: bendRimMove var(--turnDur) var(--turnEase) forwards; }
+  .turning .curlShadow{ animation: shadowMove var(--turnDur) var(--turnEase) forwards; }
+  .turning .curlRoll{ animation: rollMove var(--turnDur) var(--turnEase) forwards; }
   .turning .edge{ animation: edgeOn var(--turnDur) var(--turnEase) forwards; }
 
   /* ===== SIZES ===== */
@@ -319,7 +273,6 @@
     }
   }
 
-  /* mobile sizing (stable) */
   @media (max-width: 900px){
     .stage{
       width: min(92vw, calc(92svh / var(--pageAspect)));
@@ -348,15 +301,14 @@
     <!-- Under page (next page visible immediately) -->
     <div class="underPage" id="underPage"><img id="underImg" src="" alt=""></div>
 
-    <!-- Flip layer (only current page turning away) -->
+    <!-- Flip layer (only current page turns away) -->
     <div class="flipLayer" id="flipLayer">
       <div class="sheet" id="sheet">
         <div class="face front">
           <img id="frontImg" src="" alt="">
           <div class="specular"></div>
           <div class="curlShadow"></div>
-          <div class="bendShade"></div>
-          <div class="bendRim"></div>
+          <div class="curlRoll"></div>
           <div class="edge"></div>
         </div>
         <div class="face back"></div>
@@ -398,7 +350,6 @@
 
   const ASSETS = ["assets/cover.png","assets/left.png","assets/right.png"];
 
-  // treat landscape phones as mobile too
   function isMobile(){
     return window.matchMedia("(max-width: 900px)").matches || Math.min(window.innerWidth, window.innerHeight) <= 900;
   }
@@ -409,7 +360,7 @@
 
   function playFlip(){
     sound.currentTime = 0;
-    sound.playbackRate = 1.18;
+    sound.playbackRate = 1.12;
     sound.play().catch(()=>{});
   }
 
@@ -449,7 +400,6 @@
     el.style.transform = `translate(${left}px, ${top}px)`;
   }
 
-  // show NEXT under, animate CURRENT on top
   function doFlip(currentSrc, nextSrc, onDone){
     if (busy) return;
     busy = true;
