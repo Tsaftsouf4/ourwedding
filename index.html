@@ -13,12 +13,9 @@
 
       /* Compact (A) */
       --bookW: min(96vw, 980px);
-      --pageAspect: 1.45; /* height / width */
-      --gap: 16px;
+      --pageAspect: 1.45;
+      --gap: 14px;               /* λίγο πιο compact */
       --radius: 22px;
-
-      --shadow: 0 18px 55px rgba(0,0,0,.18);
-      --shadowSoft: 0 10px 35px rgba(0,0,0,.14);
     }
 
     *{box-sizing:border-box}
@@ -54,11 +51,10 @@
     }
     .badge .dot{width:8px;height:8px;border-radius:999px;background:var(--ink);opacity:.7}
 
-    /* --- BOOK STAGE --- */
     .stage{
       width: var(--bookW);
       height: calc((var(--bookW) / 2) * var(--pageAspect));
-      perspective: 2200px;
+      perspective: 2600px; /* πιο έντονο 3D */
       position: relative;
     }
 
@@ -68,22 +64,7 @@
       transform-style: preserve-3d;
     }
 
-    /* Paper look */
-    .sheet{
-      border-radius: var(--radius);
-      overflow:hidden;
-      background: var(--bg);
-      box-shadow: var(--shadow);
-    }
-    .sheet img{
-      width:100%;
-      height:100%;
-      display:block;
-      object-fit: contain;      /* όπως στο PDF */
-      background: var(--bg);
-    }
-
-    /* Spread (pages 2-3) */
+    /* Spread */
     .spread{
       position:absolute;
       inset:0;
@@ -93,89 +74,96 @@
       padding: 0 6px;
       align-items:stretch;
       opacity: 0;
-      transform: translateZ(-2px);
-      transition: opacity 320ms ease;
+      transition: opacity 220ms ease;
       pointer-events:none;
+      transform: translateZ(-2px);
     }
     .book.open .spread{
       opacity: 1;
       pointer-events:auto;
     }
 
+    .page{
+      width:100%;
+      height:100%;
+      border-radius: var(--radius);
+      overflow:hidden;
+      background: transparent;
+      box-shadow: 0 18px 55px rgba(0,0,0,.18);
+    }
+    .page img{
+      width:100%;
+      height:100%;
+      display:block;
+      object-fit: contain;
+      background: transparent;
+    }
+
+    /* spine */
     .spine{
       position:absolute;
-      top: 6px;
-      bottom: 6px;
+      top: 8px;
+      bottom: 8px;
       left: 50%;
       width: 3px;
       transform: translateX(-50%);
       background: rgba(0,0,0,.06);
       border-radius: 999px;
-      z-index: 3;
       pointer-events:none;
-      box-shadow: 0 0 0 1px rgba(255,255,255,.18) inset;
+      z-index: 5;
     }
 
-    /* COVER: right page, flips around spine */
+    /* COVER */
     .coverWrap{
       position:absolute;
       top:0; bottom:0;
       left:50%;
       width: calc(var(--bookW) / 2);
       transform-style: preserve-3d;
-      transform-origin: left center; /* spine */
-      transition: transform 950ms cubic-bezier(.18,.92,.18,1);
-      z-index: 10;
+      transform-origin: left center;
+      transition: transform 1050ms cubic-bezier(.16,.92,.18,1);
+      z-index: 20;
     }
-    /* closed = cover visible */
     .book.open .coverWrap{
       transform: rotateY(-180deg);
     }
 
-    /* Two sides for the cover (front/back) */
     .coverSide{
       position:absolute;
       inset:0;
       backface-visibility: hidden;
+      border-radius: var(--radius);
+      overflow:hidden;
+      box-shadow: 0 18px 55px rgba(0,0,0,.18);
+      background: transparent;
+    }
+    .coverSide img{
+      width:100%;
+      height:100%;
+      display:block;
+      object-fit: contain;
+      background: transparent;
     }
     .coverBack{
       transform: rotateY(180deg);
-      box-shadow: var(--shadowSoft);
     }
 
-    /* Realistic page curl / shading */
+    /* realistic shading while flipping */
     .coverSide::after{
       content:"";
       position:absolute;
       inset:-1px;
-      pointer-events:none;
       border-radius: var(--radius);
-      background:
-        linear-gradient(90deg,
-          rgba(0,0,0,.18) 0%,
-          rgba(0,0,0,.05) 12%,
-          rgba(0,0,0,0) 40%,
-          rgba(255,255,255,.10) 78%,
-          rgba(255,255,255,.18) 100%);
-      opacity: .22;
-      mix-blend-mode: multiply;
-    }
-
-    /* Moving shadow during flip */
-    .coverShadow{
-      position:absolute;
-      top: 10px;
-      bottom: 10px;
-      left: -12px;
-      right: 12px;
-      border-radius: calc(var(--radius) + 8px);
-      background: radial-gradient(closest-side, rgba(0,0,0,.20), rgba(0,0,0,0));
-      transform: translateZ(-1px);
-      opacity: .18;
-      transition: opacity 350ms ease;
       pointer-events:none;
+      background: linear-gradient(90deg,
+        rgba(0,0,0,.22) 0%,
+        rgba(0,0,0,.06) 14%,
+        rgba(0,0,0,0) 42%,
+        rgba(255,255,255,.10) 78%,
+        rgba(255,255,255,.18) 100%);
+      opacity:.18;
+      mix-blend-mode:multiply;
     }
-    .book.open .coverShadow{opacity:.06;}
 
     /* Controls */
     .controls{
@@ -195,9 +183,7 @@
       font-weight:650;
       cursor:pointer;
       backdrop-filter: blur(10px);
-      transition: transform .08s ease, opacity .2s ease;
     }
-    button:active{transform: translateY(1px) scale(.99)}
     button:disabled{opacity:.45; cursor:not-allowed}
 
     .hint{
@@ -222,41 +208,30 @@
       .spread{ padding: 0 2px; }
       .spine{ width: 2px; }
     }
-
-    @media (prefers-reduced-motion: reduce){
-      .coverWrap{transition:none}
-      .spread{transition:none}
-    }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="badge"><span class="dot"></span> Πρόσκληση Γάμου</div>
 
-    <div class="stage" aria-label="Flipbook (realistic)">
+    <div class="stage" aria-label="Flipbook (A compact spread)">
       <div class="book" id="book">
-        <!-- Spread κάτω -->
         <div class="spread" aria-label="Διπλή σελίδα">
-          <div class="sheet" aria-label="Ο γάμος μας">
-            <img src="assets/invite_text.jpg" alt="Ο γάμος μας" />
+          <div class="page" aria-label="Ο γάμος μας">
+            <img src="assets/left.png" alt="Ο γάμος μας" />
           </div>
-          <div class="sheet" aria-label="Η ημέρα μας">
-            <img src="assets/timeline.jpg" alt="Η ημέρα μας" />
+          <div class="page" aria-label="Η ημέρα μας">
+            <img src="assets/right.png" alt="Η ημέρα μας" />
           </div>
           <div class="spine" aria-hidden="true"></div>
         </div>
 
-        <!-- Cover πάνω -->
-        <div class="coverShadow" aria-hidden="true"></div>
-
-        <div class="coverWrap" id="coverWrap" aria-label="Save the date (εξώφυλλο)">
-          <div class="coverSide coverFront sheet">
-            <img src="assets/cover.jpg" alt="Save the date" />
+        <div class="coverWrap" id="coverWrap" aria-label="Save the date">
+          <div class="coverSide coverFront">
+            <img src="assets/cover.png" alt="Save the date" />
           </div>
-
-          <!-- Η πίσω πλευρά δείχνει το αριστερό φύλλο (Ο γάμος μας) για να φαίνεται σαν πραγματικό γύρισμα -->
-          <div class="coverSide coverBack sheet">
-            <img src="assets/invite_text.jpg" alt="Ο γάμος μας" />
+          <div class="coverSide coverBack">
+            <img src="assets/left.png" alt="Ο γάμος μας" />
           </div>
         </div>
 
@@ -271,8 +246,7 @@
     </div>
 
     <div class="hint">
-      Ξεκινάει από <b>Save the date</b>. Με το γύρισμα ανοίγει η <b>διπλή σελίδα</b>:
-      <b>Ο γάμος μας</b> (αριστερά) + <b>Η ημέρα μας</b> (δεξιά).
+      Άνοιγμα = γύρισμα εξωφύλλου (με ήχο). Μετά βλέπεις <b>διπλή σελίδα</b> (A – compact).
     </div>
 
     <audio id="flipSound" preload="auto">
@@ -292,10 +266,9 @@
       let open = false;
 
       function playFlip(){
-        // Browsers require user gesture for audio; this is only called from clicks/taps.
         try{
           flipSound.currentTime = 0;
-          flipSound.volume = 0.35; // πιο premium / χαμηλό
+          flipSound.volume = 0.28; // πολύ πιο subtle
           flipSound.play();
         }catch(e){}
       }
