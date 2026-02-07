@@ -15,8 +15,9 @@
     --radius: 22px;
     --bg: #f6ead8;
 
-    --turnDur: .74s;
-    --turnEase: cubic-bezier(.16,.9,.18,1);
+    /* smoother + more “magazine” */
+    --turnDur: .92s;
+    --turnEase: cubic-bezier(.12,.92,.12,1);
   }
 
   .wrap{
@@ -72,7 +73,7 @@
   }
   button:disabled{ opacity:.45; cursor:not-allowed; }
 
-  /* ===== UNDER PAGE ===== */
+  /* ===== UNDER PAGE (next page visible behind turn) ===== */
   .underPage{
     position:absolute;
     top:0;left:0;
@@ -84,15 +85,28 @@
     z-index:10;
     pointer-events:none;
     background:transparent;
+
+    /* nicer reveal */
+    opacity:0;
+    transform-origin:center;
   }
-  .underPage.show{ display:block; }
+  .underPage.show{
+    display:block;
+    animation: underIn var(--turnDur) var(--turnEase) forwards;
+  }
   .underPage img{
     width:100%;height:100%;
     object-fit:contain;
     display:block;
   }
 
-  /* ===== FLIP LAYER ===== */
+  @keyframes underIn{
+    0%   { opacity:0; transform: translateZ(0) scale(.996); }
+    35%  { opacity:.35; }
+    100% { opacity:1; transform: translateZ(0) scale(1); }
+  }
+
+  /* ===== FLIP LAYER (MAGAZINE CURL) ===== */
   .flipLayer{
     position:absolute;
     top:0;left:0;
@@ -128,6 +142,7 @@
     display:block;
   }
 
+  /* We animate only the current page (front) */
   .back{ display:none; }
 
   .specular{
@@ -204,40 +219,53 @@
     pointer-events:none;
   }
 
+  /* ===== KEYFRAMES: softer “magazine” turn (less door / cardboard) ===== */
   @keyframes magazineTurn {
     0%{
       transform: rotateY(0deg) translateX(0) skewY(0deg) rotateZ(0deg) scaleX(1) scaleY(1);
       clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
       filter: brightness(1) saturate(1);
     }
-    20%{
-      transform: rotateY(-22deg) translateX(3px) skewY(-1.1deg) rotateZ(-.35deg) scaleX(.992) scaleY(.998);
-      clip-path: polygon(0 0, 96% 0, 100% 14%, 100% 86%, 96% 100%, 0 100%);
+
+    18%{
+      transform: rotateY(-18deg) translateX(4px) skewY(-1.2deg) rotateZ(-.35deg) scaleX(.995) scaleY(.998);
+      clip-path: polygon(0 0, 95% 0, 100% 16%, 100% 84%, 95% 100%, 0 100%);
       filter: brightness(.997) saturate(1);
     }
-    50%{
-      transform: rotateY(-62deg) translateX(12px) skewY(-2.6deg) rotateZ(-.7deg) scaleX(.968) scaleY(.995);
-      clip-path: polygon(0 0, 82% 0, 100% 24%, 100% 76%, 82% 100%, 0 100%);
+
+    42%{
+      transform: rotateY(-42deg) translateX(14px) skewY(-3.0deg) rotateZ(-.85deg) scaleX(.972) scaleY(.995);
+      clip-path: polygon(0 0, 80% 0, 100% 26%, 100% 74%, 80% 100%, 0 100%);
       filter: brightness(.992) saturate(.995);
     }
-    78%{
-      transform: rotateY(-96deg) translateX(20px) skewY(-3.2deg) rotateZ(-.95deg) scaleX(.945) scaleY(.99);
+
+    /* small “floppy wave” */
+    62%{
+      transform: rotateY(-58deg) translateX(22px) skewY(-4.2deg) rotateZ(-1.05deg) scaleX(.952) scaleY(.992);
       clip-path: polygon(0 0, 72% 0, 100% 34%, 100% 66%, 72% 100%, 0 100%);
+      filter: brightness(.989) saturate(.992);
+    }
+
+    78%{
+      transform: rotateY(-64deg) translateX(26px) skewY(-3.6deg) rotateZ(-.95deg) scaleX(.945) scaleY(.99);
+      clip-path: polygon(0 0, 70% 0, 100% 36%, 100% 64%, 70% 100%, 0 100%);
       filter: brightness(.988) saturate(.99);
     }
+
     100%{
-      transform: rotateY(-112deg) translateX(26px) skewY(-3.4deg) rotateZ(-1.05deg) scaleX(.93) scaleY(.988);
-      clip-path: polygon(0 0, 64% 0, 100% 40%, 100% 60%, 64% 100%, 0 100%);
-      filter: brightness(.985) saturate(.99);
+      transform: rotateY(-72deg) translateX(30px) skewY(-3.2deg) rotateZ(-.85deg) scaleX(.94) scaleY(.99);
+      clip-path: polygon(0 0, 66% 0, 100% 40%, 100% 60%, 66% 100%, 0 100%);
+      filter: brightness(.987) saturate(.99);
     }
   }
 
+  /* richer moving gloss */
   @keyframes specularMove{
-    0%   { opacity:0; transform: translateX(-35%); }
-    18%  { opacity:.12; }
-    52%  { opacity:.30; transform: translateX(6%); }
-    80%  { opacity:.18; transform: translateX(26%); }
-    100% { opacity:0; transform: translateX(40%); }
+    0%   { opacity:0; transform: translateX(-40%) skewX(-12deg); }
+    22%  { opacity:.12; }
+    52%  { opacity:.34; transform: translateX(6%) skewX(-10deg); }
+    78%  { opacity:.20; transform: translateX(28%) skewX(-8deg); }
+    100% { opacity:0; transform: translateX(44%) skewX(-6deg); }
   }
 
   @keyframes curlShadowMove{
@@ -268,7 +296,11 @@
     100%{opacity:0}
   }
 
-  .turning{ animation: magazineTurn var(--turnDur) var(--turnEase) forwards; }
+  .turning{
+    animation: magazineTurn var(--turnDur) var(--turnEase) forwards;
+    /* tiny motion blur feel */
+    filter: blur(.25px);
+  }
   .turning .specular{ animation: specularMove var(--turnDur) var(--turnEase) forwards; }
   .turning .curlShadow{ animation: curlShadowMove var(--turnDur) var(--turnEase) forwards; }
   .turning .bendShade{ animation: bendShadeMove var(--turnDur) var(--turnEase) forwards; }
@@ -287,7 +319,7 @@
     }
   }
 
-  /* FIXED mobile sizing: no -200px (works portrait/landscape) */
+  /* mobile sizing (stable) */
   @media (max-width: 900px){
     .stage{
       width: min(92vw, calc(92svh / var(--pageAspect)));
@@ -304,15 +336,19 @@
 <div class="wrap">
   <div class="stage" id="stage">
 
+    <!-- Desktop container -->
     <div class="spread" id="spreadDesktop">
       <div class="page" id="desktopLeft"><img src="assets/left.png" alt="Ο γάμος μας"></div>
       <div class="page" id="desktopRight"><img src="assets/right.png" alt="Η ημέρα μας"></div>
     </div>
 
+    <!-- Cover -->
     <div class="page" id="coverSingle"><img src="assets/cover.png" alt="Cover"></div>
 
+    <!-- Under page (next page visible immediately) -->
     <div class="underPage" id="underPage"><img id="underImg" src="" alt=""></div>
 
+    <!-- Flip layer (only current page turning away) -->
     <div class="flipLayer" id="flipLayer">
       <div class="sheet" id="sheet">
         <div class="face front">
@@ -327,6 +363,7 @@
       </div>
     </div>
 
+    <!-- Mobile single -->
     <div class="page hidden" id="mobileSingle"><img id="mobileImg" src="" alt=""></div>
 
   </div>
@@ -361,7 +398,7 @@
 
   const ASSETS = ["assets/cover.png","assets/left.png","assets/right.png"];
 
-  // FIX: treat landscape phones as mobile too
+  // treat landscape phones as mobile too
   function isMobile(){
     return window.matchMedia("(max-width: 900px)").matches || Math.min(window.innerWidth, window.innerHeight) <= 900;
   }
@@ -412,6 +449,7 @@
     el.style.transform = `translate(${left}px, ${top}px)`;
   }
 
+  // show NEXT under, animate CURRENT on top
   function doFlip(currentSrc, nextSrc, onDone){
     if (busy) return;
     busy = true;
