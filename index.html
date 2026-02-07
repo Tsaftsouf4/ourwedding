@@ -15,6 +15,7 @@
     --radius: 22px;
     --bg: #f6ead8;
 
+    /* magazine feel */
     --turnDur: .74s;
     --turnEase: cubic-bezier(.16,.9,.18,1);
   }
@@ -26,6 +27,7 @@
     background:var(--bg);
   }
 
+  /* just enough perspective for “thin page” */
   .stage{
     position:relative;
     perspective: 1400px;
@@ -72,7 +74,7 @@
   }
   button:disabled{ opacity:.45; cursor:not-allowed; }
 
-  /* ===== UNDER PAGE (the NEXT page visible behind the turn) ===== */
+  /* ===== UNDER PAGE (next page visible behind turn) ===== */
   .underPage{
     position:absolute;
     top:0;left:0;
@@ -81,7 +83,7 @@
     overflow:hidden;
     box-shadow: var(--shadow);
     display:none;
-    z-index:10; /* behind turning sheet */
+    z-index:10;
     pointer-events:none;
     background:transparent;
   }
@@ -92,7 +94,7 @@
     display:block;
   }
 
-  /* ===== FLIP LAYER ===== */
+  /* ===== FLIP LAYER (MAGAZINE CURL) ===== */
   .flipLayer{
     position:absolute;
     top:0;left:0;
@@ -128,9 +130,10 @@
     display:block;
   }
 
-  /* IMPORTANT: we don't use "back" image anymore for the glitch-free version */
+  /* We animate only the current page (front) */
   .back{ display:none; }
 
+  /* Magazine-style highlight */
   .specular{
     position:absolute; inset:-2px;
     border-radius: var(--radius);
@@ -147,6 +150,7 @@
     mix-blend-mode: screen;
   }
 
+  /* shadow near curl */
   .curlShadow{
     position:absolute; inset:0;
     border-radius: var(--radius);
@@ -162,6 +166,40 @@
     mix-blend-mode: multiply;
   }
 
+  /* EXTRA: curvature shading for “floppy magazine” */
+  .bendShade{
+    position:absolute; inset:0;
+    border-radius: var(--radius);
+    pointer-events:none;
+    opacity:0;
+    background: linear-gradient(90deg,
+      rgba(0,0,0,.00) 0%,
+      rgba(0,0,0,.10) 18%,
+      rgba(0,0,0,.18) 38%,
+      rgba(0,0,0,.10) 58%,
+      rgba(0,0,0,.00) 78%
+    );
+    mix-blend-mode: multiply;
+    filter: blur(1.2px);
+  }
+
+  .bendRim{
+    position:absolute; inset:0;
+    border-radius: var(--radius);
+    pointer-events:none;
+    opacity:0;
+    background: linear-gradient(90deg,
+      rgba(255,255,255,0) 0%,
+      rgba(255,255,255,.10) 55%,
+      rgba(255,255,255,.30) 72%,
+      rgba(255,255,255,.08) 86%,
+      rgba(255,255,255,0) 100%
+    );
+    mix-blend-mode: screen;
+    filter: blur(.6px);
+  }
+
+  /* subtle “page edge” */
   .edge{
     position:absolute;
     top:0; bottom:0; left:0;
@@ -175,26 +213,60 @@
     pointer-events:none;
   }
 
+  /* ===== KEYFRAMES: floppy magazine bend + curl ===== */
   @keyframes magazineTurn {
     0%{
-      transform: rotateY(0deg) translateX(0) skewY(0deg) scaleX(1);
+      transform: rotateY(0deg) translateX(0) skewY(0deg) rotateZ(0deg) scaleX(1) scaleY(1);
       clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
-      filter: brightness(1);
+      filter: brightness(1) saturate(1);
     }
-    45%{
-      transform: rotateY(-55deg) translateX(10px) skewY(-.9deg) scaleX(.975);
-      clip-path: polygon(0 0, 92% 0, 100% 18%, 100% 82%, 92% 100%, 0 100%);
-      filter: brightness(.993);
+    20%{
+      transform: rotateY(-22deg) translateX(3px) skewY(-1.1deg) rotateZ(-.35deg) scaleX(.992) scaleY(.998);
+      clip-path: polygon(
+        0 0,
+        96% 0,
+        100% 14%,
+        100% 86%,
+        96% 100%,
+        0 100%
+      );
+      filter: brightness(.997) saturate(1);
     }
-    72%{
-      transform: rotateY(-92deg) translateX(18px) skewY(-1.2deg) scaleX(.95);
-      clip-path: polygon(0 0, 78% 0, 100% 30%, 100% 70%, 78% 100%, 0 100%);
-      filter: brightness(.988);
+    50%{
+      transform: rotateY(-62deg) translateX(12px) skewY(-2.6deg) rotateZ(-.7deg) scaleX(.968) scaleY(.995);
+      clip-path: polygon(
+        0 0,
+        82% 0,
+        100% 24%,
+        100% 76%,
+        82% 100%,
+        0 100%
+      );
+      filter: brightness(.992) saturate(.995);
+    }
+    78%{
+      transform: rotateY(-96deg) translateX(20px) skewY(-3.2deg) rotateZ(-.95deg) scaleX(.945) scaleY(.99);
+      clip-path: polygon(
+        0 0,
+        72% 0,
+        100% 34%,
+        100% 66%,
+        72% 100%,
+        0 100%
+      );
+      filter: brightness(.988) saturate(.99);
     }
     100%{
-      transform: rotateY(-110deg) translateX(24px) skewY(-1.35deg) scaleX(.94);
-      clip-path: polygon(0 0, 68% 0, 100% 36%, 100% 64%, 68% 100%, 0 100%);
-      filter: brightness(.985);
+      transform: rotateY(-112deg) translateX(26px) skewY(-3.4deg) rotateZ(-1.05deg) scaleX(.93) scaleY(.988);
+      clip-path: polygon(
+        0 0,
+        64% 0,
+        100% 40%,
+        100% 60%,
+        64% 100%,
+        0 100%
+      );
+      filter: brightness(.985) saturate(.99);
     }
   }
 
@@ -213,6 +285,20 @@
     100% { opacity:0; transform: translateX(18px); }
   }
 
+  @keyframes bendShadeMove{
+    0%   { opacity:0; transform: translateX(-10px); }
+    25%  { opacity:.10; }
+    55%  { opacity:.22; transform: translateX(10px); }
+    100% { opacity:0; transform: translateX(22px); }
+  }
+
+  @keyframes bendRimMove{
+    0%   { opacity:0; transform: translateX(-18%); }
+    35%  { opacity:.16; }
+    65%  { opacity:.30; transform: translateX(18%); }
+    100% { opacity:0; transform: translateX(34%); }
+  }
+
   @keyframes edgeOn{
     0%{opacity:0}
     35%{opacity:.10}
@@ -225,8 +311,11 @@
   }
   .turning .specular{ animation: specularMove var(--turnDur) var(--turnEase) forwards; }
   .turning .curlShadow{ animation: curlShadowMove var(--turnDur) var(--turnEase) forwards; }
+  .turning .bendShade{ animation: bendShadeMove var(--turnDur) var(--turnEase) forwards; }
+  .turning .bendRim{ animation: bendRimMove var(--turnDur) var(--turnEase) forwards; }
   .turning .edge{ animation: edgeOn var(--turnDur) var(--turnEase) forwards; }
 
+  /* ===== SIZES ===== */
   @media (min-width: 901px){
     .page{
       width: min(38vw, 420px);
@@ -258,15 +347,23 @@
 
     <!-- Desktop container -->
     <div class="spread" id="spreadDesktop">
-      <div class="page" id="desktopLeft"><img id="desktopLeftImg" src="assets/left.png" alt="Ο γάμος μας"></div>
-      <div class="page" id="desktopRight"><img id="desktopRightImg" src="assets/right.png" alt="Η ημέρα μας"></div>
+      <div class="page" id="desktopLeft">
+        <img id="desktopLeftImg" src="assets/left.png" alt="Ο γάμος μας">
+      </div>
+      <div class="page" id="desktopRight">
+        <img id="desktopRightImg" src="assets/right.png" alt="Η ημέρα μας">
+      </div>
     </div>
 
     <!-- Cover -->
-    <div class="page" id="coverSingle"><img src="assets/cover.png" alt="Cover"></div>
+    <div class="page" id="coverSingle">
+      <img src="assets/cover.png" alt="Cover">
+    </div>
 
     <!-- Under page (the next page visible immediately) -->
-    <div class="underPage" id="underPage"><img id="underImg" src="" alt=""></div>
+    <div class="underPage" id="underPage">
+      <img id="underImg" src="" alt="">
+    </div>
 
     <!-- Flip layer (only current page turning away) -->
     <div class="flipLayer" id="flipLayer">
@@ -275,6 +372,8 @@
           <img id="frontImg" src="" alt="">
           <div class="specular"></div>
           <div class="curlShadow"></div>
+          <div class="bendShade"></div>
+          <div class="bendRim"></div>
           <div class="edge"></div>
         </div>
         <div class="face back"></div>
@@ -282,7 +381,9 @@
     </div>
 
     <!-- Mobile single -->
-    <div class="page hidden" id="mobileSingle"><img id="mobileImg" src="" alt=""></div>
+    <div class="page hidden" id="mobileSingle">
+      <img id="mobileImg" src="" alt="">
+    </div>
 
   </div>
 
@@ -314,12 +415,19 @@
   const prevBtn = document.getElementById('prevBtn');
   const nextBtn = document.getElementById('nextBtn');
 
-  const ASSETS = ["assets/cover.png","assets/left.png","assets/right.png"];
+  const ASSETS = [
+    "assets/cover.png",
+    "assets/left.png",
+    "assets/right.png"
+  ];
 
   function isMobile(){ return window.innerWidth <= 900; }
 
-  let desktopState = 0;  // 0 cover, 1 spread
-  let mobileIndex = 0;   // 0 cover, 1 left, 2 right
+  // Desktop states: 0 cover, 1 spread
+  let desktopState = 0;
+  // Mobile index: 0 cover, 1 left, 2 right
+  let mobileIndex = 0;
+
   let busy = false;
 
   function playFlip(){
@@ -364,8 +472,7 @@
     el.style.transform = `translate(${left}px, ${top}px)`;
   }
 
-  // FIX: show the NEXT page underneath immediately,
-  // and animate only the CURRENT page turning away.
+  // Magazine curl flip: show NEXT under, animate CURRENT on top
   function doFlip(currentSrc, nextSrc, onDone){
     if (busy) return;
     busy = true;
@@ -383,17 +490,17 @@
       top  = (rect.height - h) / 2;
     }
 
-    // Under page (next) visible right away
+    // Under page visible immediately
     underImg.src = nextSrc;
     placeOverStage(underPage, w, h, left, top);
     underPage.classList.add('show');
 
-    // Turning layer (current) on top
+    // Turning layer on top
     frontImg.src = currentSrc;
     placeOverStage(flipLayer, w, h, left, top);
     flipLayer.classList.add('show');
 
-    // reset + animate
+    // reset animation
     sheet.classList.remove('turning');
     void sheet.offsetWidth;
 
@@ -425,6 +532,7 @@
       });
     } else {
       if (desktopState >= 1 || busy) return;
+      // cover -> spread (reveal left)
       doFlip(ASSETS[0], ASSETS[1], ()=>{
         desktopState = 1;
         showDesktop();
@@ -441,6 +549,7 @@
       });
     } else {
       if (desktopState <= 0 || busy) return;
+      // spread -> cover
       doFlip(ASSETS[1], ASSETS[0], ()=>{
         desktopState = 0;
         showDesktop();
