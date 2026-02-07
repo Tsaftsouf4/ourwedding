@@ -160,6 +160,16 @@
       .spread{ padding: 0 2px; }
       .spine{ width: 1px; }
     }
+  
+    @media (max-width: 520px){
+      :root{ --bookW: 100vw; --gap: 10px; }
+      body{ overflow-y:auto; }
+      .wrap{ justify-content:flex-start; padding-top: 14px; }
+      .stage{ transform: scale(1.10); transform-origin: top center; }
+      .spread{ padding: 0 2px; }
+      .spine{ width: 1px; }
+    }
+
   </style>
 </head>
 <body>
