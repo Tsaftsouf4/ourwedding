@@ -2,25 +2,21 @@
 <html lang="el">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <title>Πρόσκληση Γάμου</title>
   <style>
     :root{
       --bg:#f6ead9;
       --ink:#4a4038;
-      --muted:#7a6d63;
-
       --bookW: min(96vw, 980px);
-      --pageAspect: 1.45;
+      --pageAspect: 1.45;  /* height = (bookW/2)*aspect */
       --gap: 14px;
-      --radius: 22px;
     }
     *{box-sizing:border-box}
     body{
       margin:0;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
       background: radial-gradient(900px 560px at 50% -140px, #fff 0%, var(--bg) 60%, #f2dfcb 100%);
-      overflow:hidden;
       -webkit-tap-highlight-color: transparent;
     }
 
@@ -37,6 +33,8 @@
     .stage{
       width: var(--bookW);
       height: calc((var(--bookW) / 2) * var(--pageAspect));
+      max-height: 78svh;                 /* prevents huge overflow on small phones */
+      aspect-ratio: 2 / var(--pageAspect);
       perspective: 2600px;
       position: relative;
     }
@@ -57,36 +55,8 @@
     }
     .book.open .spread{ opacity: 1; pointer-events:auto; }
 
-    /* IMPORTANT: no extra card/shadow — PNG already has it */
-    .page{
-      width:100%;
-      height:100%;
-      border-radius: 0;
-      overflow: visible;
-      background: transparent;
-      box-shadow: none;
-    }
-    .page img{
-      width:100%;
-      height:100%;
-      display:block;
-      object-fit: contain;
-      background: transparent;
-    }
-
-    /* optional thin spine (very subtle) */
-    .spine{
-      position:absolute;
-      top: 10px;
-      bottom: 10px;
-      left: 50%;
-      width: 2px;
-      transform: translateX(-50%);
-      background: rgba(0,0,0,.04);
-      border-radius: 999px;
-      pointer-events:none;
-      z-index: 5;
-    }
+    .page{ width:100%; height:100%; background:transparent; box-shadow:none; }
+    .page img{ width:100%; height:100%; display:block; object-fit:contain; background:transparent; }
 
     .coverWrap{
       position:absolute;
@@ -100,47 +70,11 @@
     }
     .book.open .coverWrap{ transform: rotateY(-180deg); }
 
-    .coverSide{
-      position:absolute;
-      inset:0;
-      backface-visibility: hidden;
-      border-radius: 0;
-      overflow: visible;
-      box-shadow: none;       /* PNG already has it */
-      background: transparent;
-    }
-    .coverSide img{
-      width:100%;
-      height:100%;
-      display:block;
-      object-fit: contain;
-      background: transparent;
-    }
+    .coverSide{ position:absolute; inset:0; backface-visibility:hidden; background:transparent; box-shadow:none; }
+    .coverSide img{ width:100%; height:100%; display:block; object-fit:contain; background:transparent; }
     .coverBack{ transform: rotateY(180deg); }
 
-    /* very light page-edge shading only (no big blocks) */
-    .coverSide::after{
-      content:"";
-      position:absolute;
-      inset:0;
-      pointer-events:none;
-      background: linear-gradient(90deg,
-        rgba(0,0,0,.10) 0%,
-        rgba(0,0,0,.03) 10%,
-        rgba(0,0,0,0) 40%,
-        rgba(255,255,255,.08) 80%,
-        rgba(255,255,255,.12) 100%);
-      opacity:.10;
-      mix-blend-mode:multiply;
-    }
-
-    .controls{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      justify-content:center;
-      flex-wrap:wrap;
-    }
+    .controls{ display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap:wrap; }
     button{
       appearance:none;
       border:1px solid rgba(0,0,0,.12);
@@ -155,21 +89,12 @@
     button:active{transform: translateY(1px)}
     button:disabled{opacity:.45; cursor:not-allowed}
 
-    @media (max-width: 520px){
-      :root{ --bookW: min(96vw, 520px); --gap: 10px; }
-      .spread{ padding: 0 2px; }
-      .spine{ width: 1px; }
-    }
-  
+    /* Mobile: make it bigger WITHOUT transform-scale (safer for iOS) */
     @media (max-width: 520px){
       :root{ --bookW: 100vw; --gap: 10px; }
-      body{ overflow-y:auto; }
-      .wrap{ justify-content:flex-start; padding-top: 14px; }
-      .stage{ transform: scale(1.10); transform-origin: top center; }
-      .spread{ padding: 0 2px; }
-      .spine{ width: 1px; }
+      .wrap{ justify-content:flex-start; padding-top: 16px; }
+      .stage{ max-height: none; }       /* allow it to be large */
     }
-
   </style>
 </head>
 <body>
@@ -177,22 +102,13 @@
     <div class="stage" aria-label="Flipbook">
       <div class="book" id="book">
         <div class="spread" aria-label="Διπλή σελίδα">
-          <div class="page" aria-label="Ο γάμος μας">
-            <img src="assets/left.png" alt="Ο γάμος μας" />
-          </div>
-          <div class="page" aria-label="Η ημέρα μας">
-            <img src="assets/right.png" alt="Η ημέρα μας" />
-          </div>
-          <div class="spine" aria-hidden="true"></div>
+          <div class="page" aria-label="Ο γάμος μας"><img src="assets/left.png" alt="Ο γάμος μας" /></div>
+          <div class="page" aria-label="Η ημέρα μας"><img src="assets/right.png" alt="Η ημέρα μας" /></div>
         </div>
 
         <div class="coverWrap" aria-label="Save the date">
-          <div class="coverSide coverFront">
-            <img src="assets/cover.png" alt="Save the date" />
-          </div>
-          <div class="coverSide coverBack">
-            <img src="assets/left.png" alt="Ο γάμος μας" />
-          </div>
+          <div class="coverSide coverFront"><img src="assets/cover.png" alt="Save the date" /></div>
+          <div class="coverSide coverBack"><img src="assets/left.png" alt="Ο γάμος μας" /></div>
         </div>
       </div>
     </div>
@@ -223,7 +139,7 @@
         audioUnlocked = true;
         try{
           flipSound.volume = 0;
-          flipSound.playbackRate = 1.35; // ΠΙΟ ΓΡΗΓΟΡΑ
+          flipSound.playbackRate = 1.35;
           const p = flipSound.play();
           if(p && p.then){
             p.then(()=>{ flipSound.pause(); flipSound.currentTime = 0; flipSound.volume = 0.30; })
@@ -231,29 +147,25 @@
           }else{
             flipSound.pause(); flipSound.currentTime = 0; flipSound.volume = 0.30;
           }
-        }catch(e){
-          flipSound.volume = 0.30;
-        }
+        }catch(e){ flipSound.volume = 0.30; }
       }
 
       function playFlip(){
         try{
           flipSound.currentTime = 0;
-          flipSound.playbackRate = 1.35;  // ΠΙΟ ΓΡΗΓΟΡΑ
+          flipSound.playbackRate = 1.35;
           flipSound.volume = 0.30;
           flipSound.play();
         }catch(e){}
       }
 
       function setState(isOpen){
-        // play sound IMMEDIATELY on click
         playFlip();
         open = isOpen;
         book.classList.toggle('open', open);
         prevBtn.disabled = !open;
         nextBtn.disabled = open;
       }
-
       function openBook(){ if(!open) setState(true); }
       function closeBook(){ if(open) setState(false); }
 
@@ -262,7 +174,6 @@
       nextBtn.addEventListener('click', openBook);
       prevBtn.addEventListener('click', closeBook);
 
-      // click on stage: right=open, left=close
       document.querySelector('.stage').addEventListener('click', (e)=>{
         const rect = e.currentTarget.getBoundingClientRect();
         const x = e.clientX - rect.left;
