@@ -8,9 +8,10 @@
     :root{
       --bg:#f6ead9;
       --ink:#4a4038;
-      --bookW: min(96vw, 980px);
-      --pageAspect: 1.45;
       --gap: 14px;
+      --pageAspect: 1.45; /* height = width * aspect */
+      --bookW: min(96vw, 980px); /* desktop spread width */
+      --pageW: min(92vw, 520px); /* mobile single width */
     }
     *{box-sizing:border-box}
     body{
@@ -19,6 +20,7 @@
       background: radial-gradient(900px 560px at 50% -140px, #fff 0%, var(--bg) 60%, #f2dfcb 100%);
       -webkit-tap-highlight-color: transparent;
       overflow-x:hidden;
+      color: var(--ink);
     }
 
     .wrap{
@@ -28,55 +30,11 @@
       align-items:center;
       justify-content:center;
       gap:12px;
-      padding: 14px 10px 18px;
       padding-left: calc(10px + env(safe-area-inset-left));
       padding-right: calc(10px + env(safe-area-inset-right));
       padding-top: calc(14px + env(safe-area-inset-top));
       padding-bottom: calc(18px + env(safe-area-inset-bottom));
     }
-
-    .stage{
-      width: var(--bookW);
-      height: calc((var(--bookW) / 2) * var(--pageAspect));
-      perspective: 2600px;
-      position: relative;
-      margin: 0 auto;
-    }
-    .book{ position:absolute; inset:0; transform-style: preserve-3d; }
-
-    .spread{
-      position:absolute;
-      inset:0;
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap: var(--gap);
-      padding: 0 6px;
-      align-items:stretch;
-      opacity: 0;
-      transition: opacity 220ms ease;
-      pointer-events:none;
-      transform: translateZ(-2px);
-    }
-    .book.open .spread{ opacity: 1; pointer-events:auto; }
-
-    .page{ width:100%; height:100%; background:transparent; box-shadow:none; }
-    .page img{ width:100%; height:100%; display:block; object-fit:contain; background:transparent; }
-
-    .coverWrap{
-      position:absolute;
-      top:0; bottom:0;
-      left:50%;
-      width: calc(var(--bookW) / 2);
-      transform-style: preserve-3d;
-      transform-origin: left center;
-      transition: transform 980ms cubic-bezier(.16,.92,.18,1);
-      z-index: 20;
-    }
-    .book.open .coverWrap{ transform: rotateY(-180deg); }
-
-    .coverSide{ position:absolute; inset:0; backface-visibility:hidden; background:transparent; box-shadow:none; }
-    .coverSide img{ width:100%; height:100%; display:block; object-fit:contain; background:transparent; }
-    .coverBack{ transform: rotateY(180deg); }
 
     .controls{ display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap:wrap; }
     button{
@@ -93,42 +51,154 @@
     button:active{transform: translateY(1px)}
     button:disabled{opacity:.45; cursor:not-allowed}
 
-    /* Mobile: BIGGER + centered, no transform-scale (safe for iOS) */
+    /* ===== Desktop spread (as-is) ===== */
+    .desktopStage{
+      width: var(--bookW);
+      height: calc((var(--bookW) / 2) * var(--pageAspect));
+      perspective: 2600px;
+      position: relative;
+    }
+    .desktopBook{ position:absolute; inset:0; transform-style: preserve-3d; }
+
+    .spread{
+      position:absolute; inset:0;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--gap);
+      padding: 0 6px;
+      align-items:stretch;
+      opacity: 0;
+      transition: opacity 220ms ease;
+      pointer-events:none;
+      transform: translateZ(-2px);
+    }
+    .desktopBook.open .spread{ opacity: 1; pointer-events:auto; }
+
+    .page{ width:100%; height:100%; background:transparent; box-shadow:none; }
+    .page img{ width:100%; height:100%; display:block; object-fit:contain; background:transparent; }
+
+    .coverWrap{
+      position:absolute; top:0; bottom:0;
+      left:50%;
+      width: calc(var(--bookW) / 2);
+      transform-style: preserve-3d;
+      transform-origin: left center;
+      transition: transform 980ms cubic-bezier(.16,.92,.18,1);
+      z-index: 20;
+    }
+    .desktopBook.open .coverWrap{ transform: rotateY(-180deg); }
+    .coverSide{ position:absolute; inset:0; backface-visibility:hidden; background:transparent; box-shadow:none; }
+    .coverSide img{ width:100%; height:100%; display:block; object-fit:contain; background:transparent; }
+    .coverBack{ transform: rotateY(180deg); }
+
+    /* ===== Mobile single (centered) ===== */
+    .mobileStage{
+      width: var(--pageW);
+      height: calc(var(--pageW) * var(--pageAspect));
+      perspective: 2200px;
+      position: relative;
+      margin: 0 auto;
+    }
+    .mobileBook{ position:absolute; inset:0; transform-style: preserve-3d; }
+
+    .mobilePage{
+      position:absolute; inset:0;
+      background:transparent;
+    }
+    .mobilePage img{
+      width:100%; height:100%;
+      display:block;
+      object-fit:contain;
+      background:transparent;
+    }
+
+    /* Mobile cover flip (like opening a book) */
+    .mCoverWrap{
+      position:absolute; inset:0;
+      transform-style: preserve-3d;
+      transform-origin: left center;
+      transition: transform 980ms cubic-bezier(.16,.92,.18,1);
+      z-index: 30;
+    }
+    .mobileBook.openCover .mCoverWrap{ transform: rotateY(-180deg); }
+    .mCoverSide{ position:absolute; inset:0; backface-visibility:hidden; }
+    .mCoverBack{ transform: rotateY(180deg); }
+
+    /* Page turn animation between page 1 and 2 */
+    .turner{
+      position:absolute; inset:0;
+      transform-origin: left center;
+      transform-style: preserve-3d;
+      pointer-events:none;
+      opacity:0;
+      z-index: 40;
+    }
+    .turner img{ width:100%; height:100%; display:block; object-fit:contain; background:transparent; }
+    .turner.play{
+      opacity:1;
+      animation: turn 520ms cubic-bezier(.2,.9,.2,1) forwards;
+    }
+    @keyframes turn{
+      0%{ transform: rotateY(0deg); filter: brightness(1); }
+      100%{ transform: rotateY(-165deg); filter: brightness(.92); }
+    }
+
+    /* Layout switching */
+    .desktopOnly{ display:block; }
+    .mobileOnly{ display:none; }
+
     @media (max-width: 520px){
-      :root{
-        --bookW: min(112vw, 560px);  /* bigger than screen -> looks large */
-        --gap: 10px;
-      }
-      body{ overflow-y:auto; }
-      .wrap{
-        justify-content:flex-start;
-        gap:14px;
-      }
-      .stage{
-        margin-top: 6px;
-      }
-      /* Keep buttons visible but not covering content */
+      .wrap{ justify-content:flex-start; gap:14px; }
       .controls{
         position: sticky;
         bottom: 10px;
-        z-index: 50;
+        z-index: 60;
         padding-bottom: 6px;
       }
+      .desktopOnly{ display:none; }
+      .mobileOnly{ display:block; }
     }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="stage" aria-label="Flipbook">
-      <div class="book" id="book">
-        <div class="spread" aria-label="Διπλή σελίδα">
-          <div class="page" aria-label="Ο γάμος μας"><img src="assets/left.png" alt="Ο γάμος μας" /></div>
-          <div class="page" aria-label="Η ημέρα μας"><img src="assets/right.png" alt="Η ημέρα μας" /></div>
-        </div>
 
-        <div class="coverWrap" aria-label="Save the date">
-          <div class="coverSide coverFront"><img src="assets/cover.png" alt="Save the date" /></div>
-          <div class="coverSide coverBack"><img src="assets/left.png" alt="Ο γάμος μας" /></div>
+    <!-- DESKTOP (spread) -->
+    <div class="desktopOnly">
+      <div class="desktopStage" aria-label="Flipbook desktop">
+        <div class="desktopBook" id="desktopBook">
+          <div class="spread" aria-label="Διπλή σελίδα">
+            <div class="page"><img src="assets/left.png" alt="Ο γάμος μας" /></div>
+            <div class="page"><img src="assets/right.png" alt="Η ημέρα μας" /></div>
+          </div>
+
+          <div class="coverWrap" aria-label="Save the date">
+            <div class="coverSide coverFront"><img src="assets/cover.png" alt="Save the date" /></div>
+            <div class="coverSide coverBack"><img src="assets/left.png" alt="Ο γάμος μας" /></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MOBILE (single page centered) -->
+    <div class="mobileOnly">
+      <div class="mobileStage" aria-label="Flipbook mobile">
+        <div class="mobileBook" id="mobileBook">
+          <!-- The "current" page -->
+          <div class="mobilePage" aria-label="Σελίδα">
+            <img id="mobileCurrent" src="assets/left.png" alt="Σελίδα" />
+          </div>
+
+          <!-- Turn animation overlay -->
+          <div class="turner" id="turner" aria-hidden="true">
+            <img id="turnerImg" src="assets/left.png" alt="" />
+          </div>
+
+          <!-- Cover (on top at start) -->
+          <div class="mCoverWrap" id="mCover">
+            <div class="mCoverSide mCoverFront"><img src="assets/cover.png" alt="Save the date" /></div>
+            <div class="mCoverSide mCoverBack"><img src="assets/left.png" alt="Ο γάμος μας" /></div>
+          </div>
         </div>
       </div>
     </div>
@@ -146,59 +216,172 @@
 
   <script>
     (function(){
-      const book = document.getElementById('book');
       const prevBtn = document.getElementById('prevBtn');
       const nextBtn = document.getElementById('nextBtn');
       const flipSound = document.getElementById('flipSound');
 
-      let open = false;
-      let audioUnlocked = false;
+      const desktopBook = document.getElementById('desktopBook');
 
+      const mobileBook = document.getElementById('mobileBook');
+      const mCover = document.getElementById('mCover');
+      const mobileCurrent = document.getElementById('mobileCurrent');
+      const turner = document.getElementById('turner');
+      const turnerImg = document.getElementById('turnerImg');
+
+      const PAGES = ["assets/cover.png","assets/left.png","assets/right.png"]; // 0 cover, 1 left, 2 right
+
+      let audioUnlocked = false;
       function unlockAudio(){
         if(audioUnlocked) return;
         audioUnlocked = true;
         try{
           flipSound.volume = 0;
-          flipSound.playbackRate = 1.35;
+          flipSound.playbackRate = 1.45;   // faster
           const p = flipSound.play();
           if(p && p.then){
-            p.then(()=>{ flipSound.pause(); flipSound.currentTime = 0; flipSound.volume = 0.30; })
-             .catch(()=>{ flipSound.volume = 0.30; });
+            p.then(()=>{ flipSound.pause(); flipSound.currentTime = 0; flipSound.volume = 0.28; })
+             .catch(()=>{ flipSound.volume = 0.28; });
           }else{
-            flipSound.pause(); flipSound.currentTime = 0; flipSound.volume = 0.30;
+            flipSound.pause(); flipSound.currentTime = 0; flipSound.volume = 0.28;
           }
-        }catch(e){ flipSound.volume = 0.30; }
+        }catch(e){ flipSound.volume = 0.28; }
       }
-
       function playFlip(){
         try{
           flipSound.currentTime = 0;
-          flipSound.playbackRate = 1.35;
-          flipSound.volume = 0.30;
+          flipSound.playbackRate = 1.45;
+          flipSound.volume = 0.28;
           flipSound.play();
         }catch(e){}
       }
+      window.addEventListener('pointerdown', unlockAudio, { once:true });
 
-      function setState(isOpen){
-        playFlip();
-        open = isOpen;
-        book.classList.toggle('open', open);
-        prevBtn.disabled = !open;
-        nextBtn.disabled = open;
+      function isMobile(){
+        return window.matchMedia("(max-width: 520px)").matches;
       }
-      function openBook(){ if(!open) setState(true); }
-      function closeBook(){ if(open) setState(false); }
 
-      window.addEventListener('pointerdown', unlockAudio, { once: true });
+      // Desktop state: closed(open=false) or open(open=true)
+      let desktopOpen = false;
 
-      nextBtn.addEventListener('click', openBook);
-      prevBtn.addEventListener('click', closeBook);
+      // Mobile state index: 0 cover, 1 left, 2 right
+      let mIndex = 0;
+      let busy = false;
 
-      document.querySelector('.stage').addEventListener('click', (e)=>{
-        const rect = e.currentTarget.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        if(x > rect.width/2) openBook(); else closeBook();
+      function setButtons(){
+        if(isMobile()){
+          prevBtn.disabled = (mIndex === 0);
+          nextBtn.disabled = (mIndex === 2);
+        }else{
+          prevBtn.disabled = !desktopOpen;
+          nextBtn.disabled = desktopOpen;
+        }
+      }
+
+      function desktopSet(open){
+        desktopOpen = open;
+        desktopBook.classList.toggle("open", desktopOpen);
+        setButtons();
+      }
+
+      function mobileShow(index, withTurn){
+        if(busy) return;
+        if(index === mIndex) return;
+        busy = true;
+
+        // Cover open/close handled separately
+        if(mIndex === 0 && index === 1){
+          // open cover
+          playFlip();
+          mobileBook.classList.add("openCover");
+          setTimeout(()=>{ // after cover flip, show page 1
+            mobileCurrent.src = PAGES[1];
+            mIndex = 1;
+            setButtons();
+            busy = false;
+          }, 650);
+          return;
+        }
+        if(mIndex === 1 && index === 0){
+          // close cover
+          playFlip();
+          mobileBook.classList.remove("openCover");
+          setTimeout(()=>{
+            mIndex = 0;
+            setButtons();
+            busy = false;
+          }, 650);
+          return;
+        }
+
+        // between page 1 and 2: use turn animation
+        playFlip();
+        const fromSrc = PAGES[mIndex];
+        turnerImg.src = fromSrc;
+        turner.classList.remove("play");
+        // force reflow
+        void turner.offsetWidth;
+        turner.classList.add("play");
+
+        setTimeout(()=>{
+          mobileCurrent.src = PAGES[index];
+          mIndex = index;
+          setButtons();
+        }, 220);
+
+        setTimeout(()=>{
+          turner.classList.remove("play");
+          busy = false;
+        }, 560);
+      }
+
+      function goNext(){
+        if(isMobile()){
+          if(mIndex < 2) mobileShow(mIndex + 1, true);
+        }else{
+          desktopSet(true);
+          playFlip();
+        }
+      }
+      function goPrev(){
+        if(isMobile()){
+          if(mIndex > 0) mobileShow(mIndex - 1, true);
+        }else{
+          desktopSet(false);
+          playFlip();
+        }
+      }
+
+      nextBtn.addEventListener("click", goNext);
+      prevBtn.addEventListener("click", goPrev);
+
+      // Tap zones (stage click)
+      document.addEventListener("click", (e)=>{
+        const stage = e.target.closest(".desktopStage, .mobileStage");
+        if(!stage) return;
+        const rect = stage.getBoundingClientRect();
+        const x = (e.clientX || rect.left) - rect.left;
+        if(x > rect.width/2) goNext(); else goPrev();
       });
+
+      // Init
+      function syncLayout(){
+        // Reset visuals for safety when switching orientation
+        if(isMobile()){
+          desktopSet(false);
+          mobileBook.classList.remove("openCover");
+          mIndex = 0;
+          mobileCurrent.src = PAGES[1]; // behind cover
+        }else{
+          desktopSet(false);
+          mobileBook.classList.remove("openCover");
+          mIndex = 0;
+        }
+        setButtons();
+      }
+      window.addEventListener("resize", ()=>{ setButtons(); });
+
+      // Start
+      setButtons();
     })();
   </script>
 </body>
