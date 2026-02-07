@@ -14,21 +14,20 @@
       /* Compact (A) */
       --bookW: min(96vw, 980px);
       --pageAspect: 1.45;
-      --gap: 14px;               /* λίγο πιο compact */
+      --gap: 14px;
       --radius: 22px;
     }
-
     *{box-sizing:border-box}
     body{
       margin:0;
       font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
+      /* ΔΕΝ αλλάζω χρώματα – κρατάμε ακριβώς το ίδιο vibe */
       background: radial-gradient(900px 560px at 50% -140px, #fff 0%, var(--bg) 60%, #f2dfcb 100%);
       color: var(--ink);
       -webkit-font-smoothing:antialiased;
       text-rendering:optimizeLegibility;
       overflow-x:hidden;
     }
-
     .wrap{
       min-height:100svh;
       display:flex;
@@ -38,7 +37,6 @@
       gap:14px;
       padding: 18px 12px 26px;
     }
-
     .badge{
       display:inline-flex; gap:10px; align-items:center;
       padding:10px 14px;
@@ -54,17 +52,11 @@
     .stage{
       width: var(--bookW);
       height: calc((var(--bookW) / 2) * var(--pageAspect));
-      perspective: 2600px; /* πιο έντονο 3D */
+      perspective: 2600px;
       position: relative;
     }
+    .book{ position:absolute; inset:0; transform-style: preserve-3d; }
 
-    .book{
-      position:absolute;
-      inset:0;
-      transform-style: preserve-3d;
-    }
-
-    /* Spread */
     .spread{
       position:absolute;
       inset:0;
@@ -78,10 +70,7 @@
       pointer-events:none;
       transform: translateZ(-2px);
     }
-    .book.open .spread{
-      opacity: 1;
-      pointer-events:auto;
-    }
+    .book.open .spread{ opacity: 1; pointer-events:auto; }
 
     .page{
       width:100%;
@@ -99,7 +88,6 @@
       background: transparent;
     }
 
-    /* spine */
     .spine{
       position:absolute;
       top: 8px;
@@ -113,7 +101,6 @@
       z-index: 5;
     }
 
-    /* COVER */
     .coverWrap{
       position:absolute;
       top:0; bottom:0;
@@ -124,9 +111,7 @@
       transition: transform 1050ms cubic-bezier(.16,.92,.18,1);
       z-index: 20;
     }
-    .book.open .coverWrap{
-      transform: rotateY(-180deg);
-    }
+    .book.open .coverWrap{ transform: rotateY(-180deg); }
 
     .coverSide{
       position:absolute;
@@ -144,11 +129,8 @@
       object-fit: contain;
       background: transparent;
     }
-    .coverBack{
-      transform: rotateY(180deg);
-    }
+    .coverBack{ transform: rotateY(180deg); }
 
-    /* realistic shading while flipping */
     .coverSide::after{
       content:"";
       position:absolute;
@@ -165,13 +147,8 @@
       mix-blend-mode:multiply;
     }
 
-    /* Controls */
     .controls{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      justify-content:center;
-      flex-wrap:wrap;
+      display:flex; gap:10px; align-items:center; justify-content:center; flex-wrap:wrap;
     }
     button{
       appearance:none;
@@ -195,10 +172,7 @@
     }
 
     .tapzone{
-      position:absolute;
-      top:0; bottom:0;
-      width: 50%;
-      z-index: 30;
+      position:absolute; top:0; bottom:0; width: 50%; z-index: 30;
     }
     .tapzone.right{right:0}
     .tapzone.left{left:0}
@@ -246,10 +220,12 @@
     </div>
 
     <div class="hint">
-      Άνοιγμα = γύρισμα εξωφύλλου (με ήχο). Μετά βλέπεις <b>διπλή σελίδα</b> (A – compact).
+      Αν θες <b>τον δικό σου ήχο</b>: ανέβασε ένα αρχείο <b>assets/flip.mp3</b> (ίδιο όνομα) και θα τον χρησιμοποιήσει αυτόματα.
     </div>
 
     <audio id="flipSound" preload="auto">
+      <!-- ΒΑΛΕ εδώ το δικό σου flip.mp3 (premium). Αν δεν υπάρχει, παίζει το flip.wav -->
+      <source src="assets/flip.mp3" type="audio/mpeg">
       <source src="assets/flip.wav" type="audio/wav">
     </audio>
   </div>
@@ -268,7 +244,7 @@
       function playFlip(){
         try{
           flipSound.currentTime = 0;
-          flipSound.volume = 0.28; // πολύ πιο subtle
+          flipSound.volume = 0.28; // κράτα το premium χαμηλά
           flipSound.play();
         }catch(e){}
       }
